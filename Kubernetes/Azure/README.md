@@ -1,4 +1,4 @@
-# # Required tools:
+# Required tools:
 * [AZ-CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest)
 * [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 * [Terraform](https://www.terraform.io/downloads.html)

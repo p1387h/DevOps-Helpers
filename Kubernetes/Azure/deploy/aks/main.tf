@@ -46,6 +46,7 @@ resource "azurerm_public_ip" "public_ip" {
   name                = "${var.name}-ip"
   location            = azurerm_resource_group.resource_group.location
   allocation_method   = "Static"
+  sku                 = "Standard"
   domain_name_label   = lower("${var.name}ip${var.unique_ending}")
 
   # Create the ip inside the cluster resource group to ensure that the load 
@@ -70,7 +71,7 @@ resource "azurerm_kubernetes_cluster" "cluster" {
 
   default_node_pool {
     name            = "default"
-    vm_size         = "Standard_B2s"
+    vm_size         = "Standard_B2ms"
     max_pods        = 30
     os_disk_size_gb = 30
     type            = "VirtualMachineScaleSets"

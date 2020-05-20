@@ -1,25 +1,19 @@
 #!/bin/bash
 
-if CLUSTERNAME="" ; then
-  echo "CLUSTERNAME must be set as environment variable."
-elif RESOURCE_GROUP="" ; then
-  echo "CLUSTERNAME must be set as environment variable."
-elif LOADBALANCER_IP="" ; then
-  echo "CLUSTERNAME must be set as environment variable."
-elif KIALI_USERNAME="" ; then
-  echo "KIALI_USERNAME must be set as environment variable."
-elif KIALI_PASSWORD="" ; then
-  echo "KIALI_PASSWORD must be set as environment variable."
-else
+function connect {
   # Make kubectl connect to the cluster by default in this shell
   echo "Getting the admin credentials for $CLUSTERNAME in $RESOURCE_GROUP"
   az aks get-credentials -n $CLUSTERNAME -g $RESOURCE_GROUP --file - --admin > kube.config
   export KUBECONFIG="./kube.config"
+}
 
+function configureDashboard {
   # Enable the dashboard.
   echo "Enabling the dashboard for the kubernetes-dashboard service account"
   kubectl apply -f ./dashboard/dashboard_adminuser.yaml
+}
 
+function configureIstio {
   # Install istio. Setting maps inside an array is not supported by istioctl, therefore this 
   # hacky method must be used:
   echo "Installing istio on the cluster"
@@ -39,4 +33,25 @@ else
     --from-literal username=$KIALI_USERNAME \
     --from-literal passphrase=$KIALI_PASSWORD
   kubectl label secret/kiali -n istio-system app=kiali
+}
+
+function configureLogging {
+  kubectl apply -f ./prometheus/container-azm-ms-agentconfig.yaml
+}
+
+if CLUSTERNAME="" ; then
+  echo "CLUSTERNAME must be set as environment variable."
+elif RESOURCE_GROUP="" ; then
+  echo "CLUSTERNAME must be set as environment variable."
+elif LOADBALANCER_IP="" ; then
+  echo "CLUSTERNAME must be set as environment variable."
+elif KIALI_USERNAME="" ; then
+  echo "KIALI_USERNAME must be set as environment variable."
+elif KIALI_PASSWORD="" ; then
+  echo "KIALI_PASSWORD must be set as environment variable."
+else
+  connect
+  configureDashboard
+  configureIstio
+  configureLogging
 fi

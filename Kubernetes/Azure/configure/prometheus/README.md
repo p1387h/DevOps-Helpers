@@ -1,0 +1,2 @@
+### Adding Prometheus metrics to Azure Monitor
+In order to pass the prometheus metrics to Azure Monitor for containers a configmap must be added. See the following [tutorial](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-prometheus-integration) for further information.

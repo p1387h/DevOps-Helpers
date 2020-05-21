@@ -1,0 +1,22 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: helloworld-v1
+spec:
+  hosts:
+  - eu-example-01.westeurope.cloudapp.azure.com
+  - helloworld-v1.default.svc.cluster.local
+  gateways:
+  - ingressgateway
+  - mesh
+  http:
+  - match:
+    - uri:
+        prefix: /status
+    - uri:
+        prefix: /delay
+    route:
+    - destination:
+        port:
+          number: 5000
+        host: helloworld-v1.default.svc.cluster.local

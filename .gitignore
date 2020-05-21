@@ -6,5 +6,5 @@
 **/.terraform.tfstate.lock.info
 
 # Configuration.
-**/configure/*.config
+**kube.config
 **/configure/istio_manifest_comparison_*.yaml

@@ -18,8 +18,3 @@ spec:
         kubernetes.io/os: linux
       # Enable mutual TLS for the control plane.
       controlPlaneSecurityEnabled: true
-    gateways:
-      istio-ingressgateway:
-        sds:
-          # Enable SDS for hot-swapping secrets.
-          enabled: true

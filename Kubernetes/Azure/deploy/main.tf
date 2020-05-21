@@ -20,6 +20,8 @@ provider "random" {
 module "aks" {
   source = "./aks"
 
-  name                           = var.aks_name
-  resource_group_name            = var.resource_group_name
+  name                = var.aks_name
+  prefix              = "eu"
+  suffix              = "01"
+  location            = "West Europe"
 }

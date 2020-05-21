@@ -1,21 +1,19 @@
-variable "resource_group_name" {
-  type        = string
-  description = "The name of the resource group that all resources are being created in."
-}
-
 variable "name" {
   type        = string
-  description = "The name of the aks."
+  description = "The name of the AKS and all related resources."
 }
 
 variable "location" {
   type        = string
-  default     = "West Europe"
   description = "The location the cluster is being created in."
 }
 
-variable "unique_ending" {
+variable "prefix" {
   type        = string
-  default     = "123456789"
-  description = "String that is used for creating a unique acr name."
+  description = "String that is being used as a prefix for all resources that are being created."
+}
+
+variable "suffix" {
+  type        = string
+  description = "String that is being used as a suffix for all resources that are being created."
 }

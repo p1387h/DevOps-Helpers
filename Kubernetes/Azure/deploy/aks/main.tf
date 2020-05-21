@@ -2,14 +2,20 @@
 
 # Create the resource group.
 resource "azurerm_resource_group" "resource_group" {
-  name     = var.resource_group_name
+  name     = "${local.combined_name}-resources"
   location = var.location
+}
+
+locals {
+  combined_name = lower("${var.prefix}-${var.name}-${var.suffix}")
+  alphanumeric_combined_name = lower("${var.prefix}${var.name}${var.suffix}")
+  node_resource_group_name = "${local.combined_name}-nodes"
 }
 
 # ----- Networking - Internal-------------------------------
 
 resource "azurerm_virtual_network" "vnet" {
-  name                = "${var.name}-network"
+  name                = "${local.combined_name}-network"
   location            = azurerm_resource_group.resource_group.location
   resource_group_name = azurerm_resource_group.resource_group.name
   address_space       = ["10.1.0.0/16"]
@@ -23,7 +29,7 @@ resource "azurerm_subnet" "subnet" {
 }
 
 resource "azurerm_route_table" "route_table" {
-  name                = "${var.name}-routetable"
+  name                = "${local.combined_name}-routetable"
   location            = azurerm_resource_group.resource_group.location
   resource_group_name = azurerm_resource_group.resource_group.name
 
@@ -43,26 +49,22 @@ resource "azurerm_subnet_route_table_association" "subnet_to_route_table" {
 # ----- Networking - External-------------------------------
 
 resource "azurerm_public_ip" "public_ip" {
-  name                = "${var.name}-ip"
+  name                = "${local.combined_name}-ip"
   location            = azurerm_resource_group.resource_group.location
-  resource_group_name = local.node_resource_group_name
+  resource_group_name = azurerm_resource_group.resource_group.name
   allocation_method   = "Static"
   sku                 = "Standard"
-  domain_name_label   = lower("${var.name}ip${var.unique_ending}")
+  domain_name_label   = local.combined_name
 }
 
 # ----- AKS ------------------------------------------------
 
-locals {
-  node_resource_group_name = "${azurerm_resource_group.resource_group.name}-Resources"
-}
-
 resource "azurerm_kubernetes_cluster" "cluster" {
-  name                = "${var.name}-aks"
+  name                = "${local.combined_name}-aks"
   location            = azurerm_resource_group.resource_group.location
   resource_group_name = azurerm_resource_group.resource_group.name
   node_resource_group = local.node_resource_group_name
-  dns_prefix          = lower("${var.name}-aks")
+  dns_prefix          = "${local.combined_name}-aks"
   kubernetes_version  = "1.15.10"
 
   default_node_pool {
@@ -77,9 +79,9 @@ resource "azurerm_kubernetes_cluster" "cluster" {
 
     # Required for autoscaling.
     enable_auto_scaling = true
-    node_count          = 1
-    min_count           = 1
-    max_count           = 3
+    node_count          = 3
+    min_count           = 3
+    max_count           = 5
     availability_zones  = [1,2,3] # Requires "Standard" load balancer.
   }
 
@@ -124,7 +126,7 @@ resource "azurerm_kubernetes_cluster" "cluster" {
 # ----- Registry -------------------------------------------
 
 resource "azurerm_container_registry" "acr" {
-  name                     = lower("${var.name}acr${var.unique_ending}")
+  name                     = local.alphanumeric_combined_name
   resource_group_name      = azurerm_resource_group.resource_group.name
   location                 = azurerm_resource_group.resource_group.location
   sku                      = "Basic"
@@ -136,10 +138,23 @@ resource "azurerm_role_assignment" "cluster_pull" {
   principal_id         = azurerm_kubernetes_cluster.cluster.identity[0].principal_id
 }
 
+module "sp_pusher" {
+  source = "../service_principal"
+
+  name = "${local.combined_name}-pusher"
+}
+
+resource "azurerm_role_assignment" "registry_pusher" {
+  scope                            = azurerm_container_registry.acr.id
+  role_definition_name             = "AcrPush"
+  principal_id                     = module.sp_pusher.sp_object_id
+  skip_service_principal_aad_check = true
+}
+
 # ----- Monitoring -----------------------------------------
 
 resource "azurerm_log_analytics_workspace" "log_analytics" {
-  name                = "${var.name}-law"
+  name                = "${local.combined_name}-law"
   location            = azurerm_resource_group.resource_group.location
   resource_group_name = azurerm_resource_group.resource_group.name
   sku                 = "PerGB2018"
@@ -170,4 +185,26 @@ resource "azurerm_log_analytics_solution" "security" {
     publisher = "Microsoft"
     product   = "OMSGallery/Security"
   }
+}
+
+# ----- Administration -------------------------------------
+
+module "sp_admin" {
+  source = "../service_principal"
+
+  name = "${local.combined_name}-admin"
+}
+
+resource "azurerm_role_assignment" "cluster_admin" {
+  scope                            = azurerm_kubernetes_cluster.cluster.id
+  role_definition_name             = "Azure Kubernetes Service Cluster Admin Role"
+  principal_id                     = module.sp_admin.sp_object_id
+  skip_service_principal_aad_check = true
+}
+
+resource "azurerm_role_assignment" "cluster_contributor" {
+  scope                            = azurerm_kubernetes_cluster.cluster.id
+  role_definition_name             = "Contributor"
+  principal_id                     = module.sp_admin.sp_object_id
+  skip_service_principal_aad_check = true
 }

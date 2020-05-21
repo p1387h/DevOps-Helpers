@@ -21,6 +21,7 @@ function configureIstio {
     -f ./istio/istiooperator_configuration.yaml \
     --set components.ingressGateways[0].enabled=true \
     --set components.ingressGateways[0].k8s.service.loadBalancerIP=$LOADBALANCER_IP \
+    --set components.ingressGateways[0].k8s.serviceAnnotations.service\\.beta\\.kubernetes\\.io/azure-load-balancer-resource-group=$IP_RESOURCEGROUP \
     --set components.ingressGateways[0].k8s.service.ports[0].name=http2 \
     --set components.ingressGateways[0].k8s.service.ports[0].port=80 \
     --set components.ingressGateways[0].k8s.service.ports[0].targetPort=80 \
@@ -39,15 +40,17 @@ function configureLogging {
   kubectl apply -f ./prometheus/container-azm-ms-agentconfig.yaml
 }
 
-if CLUSTERNAME="" ; then
+if [ -z ${CLUSTERNAME+x} ]; then
   echo "CLUSTERNAME must be set as environment variable."
-elif RESOURCE_GROUP="" ; then
-  echo "CLUSTERNAME must be set as environment variable."
-elif LOADBALANCER_IP="" ; then
-  echo "CLUSTERNAME must be set as environment variable."
-elif KIALI_USERNAME="" ; then
+elif [ -z ${RESOURCE_GROUP+x} ]; then
+  echo "RESOURCE_GROUP must be set as environment variable."
+elif [ -z ${LOADBALANCER_IP+x} ]; then
+  echo "LOADBALANCER_IP must be set as environment variable."
+elif [ -z ${IP_RESOURCEGROUP+x} ]; then
+  echo "IP_RESOURCEGROUP path must be set as environment variable."
+elif [ -z ${KIALI_USERNAME+x} ]; then
   echo "KIALI_USERNAME must be set as environment variable."
-elif KIALI_PASSWORD="" ; then
+elif [ -z ${KIALI_PASSWORD+x} ]; then
   echo "KIALI_PASSWORD must be set as environment variable."
 else
   connect

@@ -45,14 +45,10 @@ resource "azurerm_subnet_route_table_association" "subnet_to_route_table" {
 resource "azurerm_public_ip" "public_ip" {
   name                = "${var.name}-ip"
   location            = azurerm_resource_group.resource_group.location
+  resource_group_name = local.node_resource_group_name
   allocation_method   = "Static"
   sku                 = "Standard"
   domain_name_label   = lower("${var.name}ip${var.unique_ending}")
-
-  # Create the ip inside the cluster resource group to ensure that the load 
-  # balancer can access it.
-  depends_on          = [azurerm_kubernetes_cluster.cluster]
-  resource_group_name = local.node_resource_group_name
 }
 
 # ----- AKS ------------------------------------------------
@@ -113,6 +109,9 @@ resource "azurerm_kubernetes_cluster" "cluster" {
   role_based_access_control {
     enabled = true
   }
+
+  # Wait for the ip to be available since the ingress is mapped to it.
+  depends_on = [azurerm_public_ip.public_ip]
 
   lifecycle {
     ignore_changes = [

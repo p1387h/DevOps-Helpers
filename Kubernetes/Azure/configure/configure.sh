@@ -14,19 +14,10 @@ function configureDashboard {
 }
 
 function configureIstio {
-  # Install istio. Setting maps inside an array is not supported by istioctl, therefore this 
-  # hacky method must be used:
+  # Install istio.
   echo "Installing istio on the cluster"
   istioctl manifest apply \
-    -f ./istio/istiooperator_configuration.yaml \
-    --set components.ingressGateways[0].enabled=true \
-    --set components.ingressGateways[0].k8s.service.loadBalancerIP=$LOADBALANCER_IP \
-    --set components.ingressGateways[0].k8s.serviceAnnotations.service\\.beta\\.kubernetes\\.io/azure-load-balancer-resource-group=$IP_RESOURCEGROUP \
-    --set components.ingressGateways[0].k8s.service.ports[0].name=http2 \
-    --set components.ingressGateways[0].k8s.service.ports[0].port=80 \
-    --set components.ingressGateways[0].k8s.service.ports[0].targetPort=80 \
-    --set components.ingressGateways[0].k8s.service.ports[1].name=https \
-    --set components.ingressGateways[0].k8s.service.ports[1].port=443
+    -f ./istio/istiooperator_configuration.yaml
 
   # Set the kiali username and password.
   kubectl create secret generic kiali \

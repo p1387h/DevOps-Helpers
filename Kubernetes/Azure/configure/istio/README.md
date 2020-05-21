@@ -65,8 +65,3 @@ istioctl manifest generate > default.yaml
 istioctl manifest generate -f ./istiooperator_configuration.yaml > default_comparison.yaml
 istioctl manifest diff ./default.yaml ./default_comparison.yaml
 ```
-
-Helper script for quickly comparing these configuration files:
-```sh
-./compare_istio_configuration.sh
-```

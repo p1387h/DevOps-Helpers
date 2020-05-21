@@ -6,22 +6,6 @@ spec:
       enabled: true
       k8s:
         replicaCount: 1
-  components:
-    ingressGateways:
-      - enabled: true
-        k8s:
-          serviceAnnotations:
-            service.beta.kubernetes.io/azure-load-balancer-resource-group: $IP_RESOURCEGROUP
-          service:
-            loadBalancerIP: $LOADBALANCER_IP
-            ports:
-              -
-                name: http2
-                port: 80
-                targetPort: 80
-              -
-                name: https
-                port: 443
   values:
     global:
       # Do not allow the sidecar to send traffic to external sources 
@@ -34,3 +18,8 @@ spec:
         kubernetes.io/os: linux
       # Enable mutual TLS for the control plane.
       controlPlaneSecurityEnabled: true
+    gateways:
+      istio-ingressgateway:
+        sds:
+          # Enable SDS for hot-swapping secrets.
+          enabled: true

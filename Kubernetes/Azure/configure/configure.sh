@@ -7,6 +7,13 @@ function connect {
   export KUBECONFIG="./kube.config"
 }
 
+# Function for copying the kubectl configuration to the places it 
+# is being referred to.
+function copyConfig {
+  cp ./kube.config ./istio/kube.config
+  cp ./kube.config ./helloworld/kube.config
+}
+
 function configureDashboard {
   # Enable the dashboard.
   echo "Enabling the dashboard for the kubernetes-dashboard service account"
@@ -45,6 +52,7 @@ elif [ -z ${KIALI_PASSWORD+x} ]; then
   echo "KIALI_PASSWORD must be set as environment variable."
 else
   connect
+  copyConfig
   configureDashboard
   configureIstio
   configureLogging

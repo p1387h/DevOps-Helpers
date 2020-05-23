@@ -57,6 +57,13 @@ resource "azurerm_public_ip" "public_ip" {
   domain_name_label   = local.combined_name
 }
 
+# Allow the aks to read the ip address in order to assign it to a load balancer.
+resource "azurerm_role_assignment" "ip_reader" {
+  scope                            = azurerm_resource_group.resource_group.id
+  role_definition_name             = "Network Contributor"
+  principal_id                     = azurerm_kubernetes_cluster.cluster.identity[0].principal_id
+}
+
 # ----- AKS ------------------------------------------------
 
 resource "azurerm_kubernetes_cluster" "cluster" {

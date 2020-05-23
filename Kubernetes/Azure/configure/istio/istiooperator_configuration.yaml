@@ -6,12 +6,29 @@ spec:
       enabled: true
       k8s:
         replicaCount: 1
+  components:
+    ingressGateways:
+      - enabled: true
+        k8s:
+          serviceAnnotations:
+            service.beta.kubernetes.io/azure-load-balancer-resource-group: $IP_RESOURCEGROUP
+          service:
+            loadBalancerIP: $LOADBALANCER_IP
+            ports:
+              -
+                name: http2
+                port: 80
+                targetPort: 80
+              -
+                name: https
+                port: 443
+  meshConfig:
+    # Do not allow the sidecar to send traffic to external sources 
+    # unless they are defined in the service mesh.
+    outboundTrafficPolicy:
+        mode: REGISTRY_ONLY
   values:
     global:
-      # Do not allow the sidecar to send traffic to external sources 
-      # unless they are defined in the service mesh.
-      outboundTrafficPolicy:
-          mode: REGISTRY_ONLY
       # Ensure that the Istio pods are only scheduled to run on Linux 
       # nodes.
       defaultNodeSelector:

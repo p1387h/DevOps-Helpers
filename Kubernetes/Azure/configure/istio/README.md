@@ -4,14 +4,32 @@ Istio requires at least 4GB of RAM for starting all services successfully. Since
 ### Step 1: AKS Preparation
 https://docs.microsoft.com/en-us/azure/aks/servicemesh-istio-install?pivots=client-operating-system-linux
 
-Change the username and password (as base64) inside the kiali.yaml file and execute the following command to make them available in the cluster:
+Change the usernames and passwords (as base64) inside the kiali.yaml and grafana.yaml files and execute the following command to make them available in the cluster:
 
 ```sh
+kubectl apply -f secret_grafana.yaml
 kubectl apply -f secret_kiali.yaml
 ```
 
 [Microsoft example](https://docs.microsoft.com/en-us/azure/aks/servicemesh-istio-install?pivots=client-operating-system-linux#install-the-istio-components-on-aks):
 ```sh
+GRAFANA_USERNAME=$(echo -n "grafana" | base64)
+GRAFANA_PASSPHRASE=$(echo -n "REPLACE_WITH_YOUR_SECURE_PASSWORD" | base64)
+
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana
+  namespace: istio-system
+  labels:
+    app: grafana
+type: Opaque
+data:
+  username: $GRAFANA_USERNAME
+  passphrase: $GRAFANA_PASSPHRASE
+EOF
+
 KIALI_USERNAME=$(echo -n "kiali" | base64)
 KIALI_PASSPHRASE=$(echo -n "REPLACE_WITH_YOUR_SECURE_PASSWORD" | base64)
 

@@ -4,10 +4,10 @@ metadata:
   name: helloworld-v1
 spec:
   hosts:
-  - eu-example-01.westeurope.cloudapp.azure.com
+  - helloworld-v1.eu-example-01.westeurope.cloudapp.azure.com
   - helloworld-v1.default.svc.cluster.local
   gateways:
-  - istio-ingressgateway
+  - istio-system/helloworld-v1-gateway
   - mesh
   http:
   - route:

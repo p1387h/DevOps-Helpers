@@ -26,6 +26,13 @@ function configureIstio {
   istioctl manifest apply \
     -f ./istio/istiooperator_configuration.yaml
 
+  # Set the grafana username and password.
+  kubectl create secret generic grafana \
+    -n istio-system \
+    --from-literal username=$GRAFANA_USERNAME \
+    --from-literal passphrase=$GRAFANA_PASSWORD
+  kubectl label secret/grafana -n istio-system app=grafana
+
   # Set the kiali username and password.
   kubectl create secret generic kiali \
     -n istio-system \
@@ -50,6 +57,10 @@ elif [ -z ${KIALI_USERNAME+x} ]; then
   echo "KIALI_USERNAME must be set as environment variable."
 elif [ -z ${KIALI_PASSWORD+x} ]; then
   echo "KIALI_PASSWORD must be set as environment variable."
+elif [ -z ${GRAFANA_USERNAME+x} ]; then
+  echo "GRAFANA_USERNAME must be set as environment variable."
+elif [ -z ${GRAFANA_PASSWORD+x} ]; then
+  echo "GRAFANA_PASSWORD must be set as environment variable."
 else
   connect
   copyConfig

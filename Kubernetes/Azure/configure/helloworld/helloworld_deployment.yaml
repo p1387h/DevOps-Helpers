@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: helloworld-v1
+  namespace: example
 spec:
   replicas: 1
   selector:
@@ -16,10 +17,10 @@ spec:
     spec:
       containers:
       - name: helloworld
-        image: istio/examples-helloworld-v1
+        image: crccheck/hello-world
         resources:
           requests:
             cpu: "100m"
         imagePullPolicy: IfNotPresent #Always
         ports:
-        - containerPort: 5000
+        - containerPort: 8000

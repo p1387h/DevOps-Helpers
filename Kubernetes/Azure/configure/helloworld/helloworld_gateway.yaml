@@ -12,4 +12,5 @@ spec:
       name: http2
       protocol: HTTP
     hosts:
-    - "default/helloworld-v1.eu-example-01.westeurope.cloudapp.azure.com"
+    # Namespace/VirtualServiceHost
+    - "example/eu-example-01.westeurope.cloudapp.azure.com"

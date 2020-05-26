@@ -2,16 +2,19 @@ apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: helloworld-v1
+  namespace: example
 spec:
   hosts:
-  - helloworld-v1.eu-example-01.westeurope.cloudapp.azure.com
-  - helloworld-v1.default.svc.cluster.local
+  - eu-example-01.westeurope.cloudapp.azure.com
+  - helloworld-v1.example.svc.cluster.local
   gateways:
   - istio-system/helloworld-v1-gateway
   - mesh
   http:
-  - route:
+  - match:
+    - port: 80
+    route:
     - destination:
         port:
-          number: 5000
-        host: helloworld-v1.default.svc.cluster.local
+          number: 8000
+        host: helloworld-v1.example.svc.cluster.local

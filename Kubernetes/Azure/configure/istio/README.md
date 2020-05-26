@@ -84,6 +84,11 @@ istioctl manifest generate -f ./istiooperator_configuration.yaml > default_compa
 istioctl manifest diff ./default.yaml ./default_comparison.yaml
 ```
 
+##### Notes: Gateway
+The gateway for each resource must be placed inside the same namespace that the gateway workload instance (the ingressgateway pod) resides in. This is due to the selector being restricted to one single namespace.
+
+https://istio.io/docs/reference/config/networking/gateway/#Gateway
+
 ### Step 3:
 Enforce the usage of mutual tls in the whole mesh by applying the following configuration file to the cluster. Make sure that the namespace of the peerauthentication resource matches the istio installation namespace (i.e. istio-system).
 

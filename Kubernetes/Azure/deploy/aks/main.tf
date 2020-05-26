@@ -155,7 +155,6 @@ resource "azurerm_role_assignment" "registry_pusher" {
   scope                            = azurerm_container_registry.acr.id
   role_definition_name             = "AcrPush"
   principal_id                     = module.sp_pusher.sp_object_id
-  skip_service_principal_aad_check = true
 }
 
 # ----- Monitoring -----------------------------------------
@@ -206,12 +205,10 @@ resource "azurerm_role_assignment" "cluster_admin" {
   scope                            = azurerm_kubernetes_cluster.cluster.id
   role_definition_name             = "Azure Kubernetes Service Cluster Admin Role"
   principal_id                     = module.sp_admin.sp_object_id
-  skip_service_principal_aad_check = true
 }
 
 resource "azurerm_role_assignment" "cluster_contributor" {
   scope                            = azurerm_kubernetes_cluster.cluster.id
   role_definition_name             = "Contributor"
   principal_id                     = module.sp_admin.sp_object_id
-  skip_service_principal_aad_check = true
 }

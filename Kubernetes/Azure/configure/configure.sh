@@ -39,6 +39,9 @@ function configureIstio {
     --from-literal username=$KIALI_USERNAME \
     --from-literal passphrase=$KIALI_PASSWORD
   kubectl label secret/kiali -n istio-system app=kiali
+
+  # Enforce mutual tls.
+  kubectl apply -f ./istio/peerauthentication_mutualtls.yaml
 }
 
 function configureLogging {

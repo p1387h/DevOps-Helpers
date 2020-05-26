@@ -83,3 +83,12 @@ istioctl manifest generate > default.yaml
 istioctl manifest generate -f ./istiooperator_configuration.yaml > default_comparison.yaml
 istioctl manifest diff ./default.yaml ./default_comparison.yaml
 ```
+
+### Step 3:
+Enforce the usage of mutual tls in the whole mesh by applying the following configuration file to the cluster. Make sure that the namespace of the peerauthentication resource matches the istio installation namespace (i.e. istio-system).
+
+```sh
+kubectl apply -f ./peerauthentication_mutualtls.yaml
+```
+
+https://istio.io/docs/reference/config/security/peer_authentication/#PeerAuthentication

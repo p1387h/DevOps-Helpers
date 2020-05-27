@@ -68,6 +68,12 @@ function configureLogging {
   kubectl apply -f ./prometheus/container-azm-ms-agentconfig.yaml
 }
 
+function configureNetwork {
+  # Restrict the network communication inside the cluster.
+  echo "Applying default network policy"
+  kubectl apply -f ./istio/networkpolicy_restrictall.yaml
+}
+
 if [ -z ${CLUSTERNAME+x} ]; then
   echo "CLUSTERNAME must be set as environment variable."
 elif [ -z ${RESOURCE_GROUP+x} ]; then
@@ -90,4 +96,5 @@ else
   configureDashboard
   configureIstio
   configureLogging
+  configureNetwork
 fi

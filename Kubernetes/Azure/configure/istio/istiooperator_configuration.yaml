@@ -11,9 +11,16 @@ spec:
     tracing:
       enabled: true
   components:
+    egressGateways:
+      - enabled: true
+        namespace: istio-egress
+        k8s:
+          replicaCount: 3
     ingressGateways:
       - enabled: true
+        namespace: istio-ingress
         k8s:
+          replicaCount: 3
           serviceAnnotations:
             service.beta.kubernetes.io/azure-load-balancer-resource-group: $IP_RESOURCEGROUP
           service:
@@ -26,11 +33,6 @@ spec:
               -
                 name: https
                 port: 443
-  meshConfig:
-    # Do not allow the sidecar to send traffic to external sources 
-    # unless they are defined in the service mesh.
-    outboundTrafficPolicy:
-        mode: REGISTRY_ONLY
   values:
     global:
       # Ensure that the Istio pods are only scheduled to run on Linux 

@@ -7,4 +7,4 @@
 
 # Configuration.
 **kube.config
-**istio_manifest_comparison_*.yaml
+**.temp.yaml

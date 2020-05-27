@@ -21,12 +21,24 @@ function configureDashboard {
 }
 
 function configureIstio {
+  # Make copy of configuration and replace the necessary strings 
+  # inside it.
+  echo "Replacing configuration entries"
+  cp ./istio/istiooperator_configuration.yaml ./istio/istiooperator_configuration.temp.yaml
+  sed -i -e 's/$LOADBALANCER_IP/'$LOADBALANCER_IP'/g' ./istio/istiooperator_configuration.temp.yaml
+  sed -i -e 's/$IP_RESOURCEGROUP/'$IP_RESOURCEGROUP'/g' ./istio/istiooperator_configuration.temp.yaml
+
+  # Create the namespaces for the gateways.
+  kubectl apply -f ./istio/namespace_ingressgateway.yaml
+  kubectl apply -f ./istio/namespace_egressgateway.yaml
+
   # Install istio.
   echo "Installing istio on the cluster"
   istioctl manifest apply \
-    -f ./istio/istiooperator_configuration.yaml
+    -f ./istio/istiooperator_configuration.temp.yaml
 
   # Set the grafana username and password.
+  echo "Setting grafana username and password"
   kubectl create secret generic grafana \
     -n istio-system \
     --from-literal username=$GRAFANA_USERNAME \
@@ -34,6 +46,7 @@ function configureIstio {
   kubectl label secret/grafana -n istio-system app=grafana
 
   # Set the kiali username and password.
+  echo "Setting kiali username and password"
   kubectl create secret generic kiali \
     -n istio-system \
     --from-literal username=$KIALI_USERNAME \
@@ -41,6 +54,7 @@ function configureIstio {
   kubectl label secret/kiali -n istio-system app=kiali
 
   # Enforce mutual tls.
+  echo "Enforcing mutual tls"
   kubectl apply -f ./istio/peerauthentication_mutualtls.yaml
 }
 

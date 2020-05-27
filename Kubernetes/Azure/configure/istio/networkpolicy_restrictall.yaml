@@ -20,6 +20,10 @@ spec:
   - to:
     - namespaceSelector:
         matchLabels:
+          istio: system
+  - to:
+    - namespaceSelector:
+        matchLabels:
           istio: egress
       podSelector:
         matchLabels:

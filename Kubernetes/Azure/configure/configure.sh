@@ -37,6 +37,12 @@ function configureIstio {
   istioctl manifest apply \
     -f ./istio/istiooperator_configuration.temp.yaml
 
+  # Label the created istio-system namespace in order to apply 
+  # kubernetes network policies. Do the same for the kube-system 
+  # namespace.
+  kubectl label ns istio-system istio=system
+  kubectl label ns kube-system ns=kube-system
+  
   # Set the grafana username and password.
   echo "Setting grafana username and password"
   kubectl create secret generic grafana \

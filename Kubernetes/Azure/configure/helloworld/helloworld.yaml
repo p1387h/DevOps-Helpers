@@ -4,6 +4,7 @@ metadata:
   name: example
   labels:
     istio-injection: enabled
+    ns: example
 ---
 apiVersion: apps/v1
 kind: Deployment

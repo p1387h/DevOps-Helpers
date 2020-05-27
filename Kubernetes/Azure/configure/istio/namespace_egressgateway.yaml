@@ -4,3 +4,4 @@ metadata:
   name: istio-egress
   labels:
     istio: egress
+    istio-injection: enabled

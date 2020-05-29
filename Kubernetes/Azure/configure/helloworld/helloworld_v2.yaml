@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: example-v2
+  labels:
+    istio-injection: enabled
+    ns: example-v2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloworld-v2
+  namespace: example-v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: helloworld-v2
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: helloworld-v2
+        version: v1
+    spec:
+      containers:
+      - name: helloworld
+        image: crccheck/hello-world
+        resources:
+          requests:
+            cpu: "100m"
+        imagePullPolicy: IfNotPresent #Always
+        ports:
+        - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: helloworld-v2
+  namespace: example-v2
+  labels:
+    app: helloworld-v2
+spec:
+  ports:
+  - name: http
+    port: 8000
+  selector:
+    app: helloworld-v2
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: helloworld-v2
+  namespace: example-v2
+spec:
+  hosts:
+  #- eu-example-01.westeurope.cloudapp.azure.com
+  - helloworld-v2.example-v2.svc.cluster.local
+  gateways:
+  #- istio-ingress/helloworld-v2-gateway
+  - mesh
+  http:
+  - match:
+    - port: 80
+    route:
+    - destination:
+        port:
+          number: 8000
+        host: helloworld-v2.example-v2.svc.cluster.local
+---
+#apiVersion: networking.istio.io/v1beta1
+#kind: Gateway
+#metadata:
+#  name: helloworld-v2-gateway
+#  namespace: istio-ingress
+#spec:
+#  selector:
+#    istio: ingressgateway # use Istio default gateway implementation
+#  servers:
+#  - port:
+#      number: 80
+#      name: http2
+#      protocol: HTTP
+#    hosts:
+#    # Namespace/VirtualServiceHost
+#    - "example-v2/eu-example-01.westeurope.cloudapp.azure.com"

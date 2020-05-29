@@ -60,8 +60,13 @@ spec:
   - istio-ingress/helloworld-v1-gateway
   - mesh
   http:
-  - match:
+  - name: "v1-endpoint"
+    match:
     - port: 80
+      uri:
+        prefix: "/v1"
+    rewrite:
+      uri: "/"
     route:
     - destination:
         port:

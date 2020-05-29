@@ -54,33 +54,37 @@ metadata:
   namespace: example-v2
 spec:
   hosts:
-  #- eu-example-01.westeurope.cloudapp.azure.com
+  - eu-example-01.westeurope.cloudapp.azure.com
   - helloworld-v2.example-v2.svc.cluster.local
   gateways:
-  #- istio-ingress/helloworld-v2-gateway
+  - istio-ingress/helloworld-v2-gateway
   - mesh
   http:
   - match:
     - port: 80
+      uri:
+        prefix: "/v2"
+    rewrite:
+      uri: "/"
     route:
     - destination:
         port:
           number: 8000
         host: helloworld-v2.example-v2.svc.cluster.local
 ---
-#apiVersion: networking.istio.io/v1beta1
-#kind: Gateway
-#metadata:
-#  name: helloworld-v2-gateway
-#  namespace: istio-ingress
-#spec:
-#  selector:
-#    istio: ingressgateway # use Istio default gateway implementation
-#  servers:
-#  - port:
-#      number: 80
-#      name: http2
-#      protocol: HTTP
-#    hosts:
-#    # Namespace/VirtualServiceHost
-#    - "example-v2/eu-example-01.westeurope.cloudapp.azure.com"
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: helloworld-v2-gateway
+  namespace: istio-ingress
+spec:
+  selector:
+    istio: ingressgateway # use Istio default gateway implementation
+  servers:
+  - port:
+      number: 80
+      name: http2
+      protocol: HTTP
+    hosts:
+    # Namespace/VirtualServiceHost
+    - "example-v2/eu-example-01.westeurope.cloudapp.azure.com"

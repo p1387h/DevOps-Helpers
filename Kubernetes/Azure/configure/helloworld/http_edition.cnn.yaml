@@ -1,0 +1,117 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: cnn
+  namespace: example-v1
+spec:
+  hosts:
+  - edition.cnn.com
+  ports:
+  - number: 80
+    name: http-port
+    protocol: HTTP
+  - number: 443
+    name: https
+    protocol: HTTPS
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: istio-egressgateway
+  namespace: istio-egress
+spec:
+  selector:
+    istio: egressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - edition.cnn.com
+---
+#apiVersion: networking.istio.io/v1alpha3
+#kind: DestinationRule
+#metadata:
+#  name: egressgateway-for-cnn
+#  namespace: example-v1
+#spec:
+#  host: istio-egressgateway.istio-egress.svc.cluster.local
+#  exportTo:
+#  - *
+#  subsets:
+#  - name: cnn
+#---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: direct-cnn-through-egress-gateway
+  namespace: example-v1
+spec:
+  hosts:
+  - edition.cnn.com
+  gateways:
+  - mesh
+  http:
+  - match:
+    - gateways:
+      - mesh
+      port: 80
+    route:
+    - destination:
+        host: istio-egressgateway.istio-egress.svc.cluster.local
+        #subset: cnn
+        port:
+          number: 80
+      weight: 100
+#  - match:
+#    - gateways:
+#      - istio-egressgateway
+#      port: 80
+#    route:
+#    - destination:
+#        host: edition.cnn.com
+#        port:
+#          number: 80
+#      weight: 100
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: direct-cnn-through-egress-gateway
+  namespace: istio-egress
+spec:
+  hosts:
+  - edition.cnn.com
+  gateways:
+  - istio-egress/istio-egressgateway
+  http:
+  - match:
+    - gateways:
+      - istio-egressgateway
+      port: 80
+    route:
+    - destination:
+        host: edition.cnn.com
+        port:
+          number: 80
+      weight: 100
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: cnn
+  namespace: istio-egress
+spec:
+  hosts:
+  - edition.cnn.com
+  ports:
+  - number: 80
+    name: http-port
+    protocol: HTTP
+  - number: 443
+    name: https
+    protocol: HTTPS
+  resolution: DNS
+---

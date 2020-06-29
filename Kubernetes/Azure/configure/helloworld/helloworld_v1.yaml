@@ -11,6 +11,9 @@ kind: Deployment
 metadata:
   name: helloworld-v1
   namespace: example-v1
+  labels:
+    app: helloworld-v1
+    version: v1
 spec:
   replicas: 1
   selector:

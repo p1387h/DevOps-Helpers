@@ -56,6 +56,9 @@ metadata:
   name: helloworld-v1
   namespace: example-v1
 spec:
+  # Do NOT set the "exportTo" key here since the Gateway resource
+  # must be able to see the service. By default all virtual services,
+  # service entries and destination rules are globally visible.
   hosts:
   - eu-example-01.westeurope.cloudapp.azure.com
   - helloworld-v1.example-v1.svc.cluster.local

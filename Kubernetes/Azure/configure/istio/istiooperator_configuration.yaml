@@ -37,7 +37,7 @@ spec:
     # Do not allow the sidecar to send traffic to external sources 
     # unless they are defined in the service mesh.
     outboundTrafficPolicy:
-        mode: REGISTRY_ONLY
+      mode: REGISTRY_ONLY
     # Enable logging for the sidecars.
     accessLogFile: "/dev/stdout"
     # JSON or TEXT as logging encoding.

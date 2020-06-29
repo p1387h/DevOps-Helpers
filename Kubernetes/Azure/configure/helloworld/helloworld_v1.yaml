@@ -85,7 +85,7 @@ spec:
   - port:
       number: 80
       name: http2
-      protocol: HTTP
+      protocol: HTTP2
     hosts:
     # Namespace/VirtualServiceHost
     - "example-v1/eu-example-01.westeurope.cloudapp.azure.com"

@@ -1,0 +1,112 @@
+# Add the external host to the mesh. Make sure to 
+# ONLY export it to the namespace in which the 
+# requests are allowed.
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: direct-google-through-egress-gateway
+  namespace: example-v1
+spec:
+  exportTo:
+  - "."
+  hosts:
+  - google.com
+  ports:
+  - number: 443
+    name: tls
+    protocol: TLS
+  resolution: DNS
+  location: MESH_EXTERNAL
+---
+# Forward any requests to the external host to the gateway.
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: direct-google-through-egress-gateway
+  namespace: example-v1
+spec:
+  exportTo:
+  - "."
+  hosts:
+  - google.com
+  gateways:
+  - mesh
+  tls:
+  - match:
+    - gateways:
+      - mesh
+      port: 443
+      sniHosts:
+      - google.com
+    route:
+    - destination:
+        host: istio-egressgateway.istio-egress.svc.cluster.local
+        port:
+          number: 443
+      weight: 100
+---
+# LoadBalancer configuration for the external service.
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: istio-egressgateway
+  namespace: istio-egress
+spec:
+  selector:
+    istio: egressgateway
+  servers:
+  - port:
+      number: 443
+      name: tls
+      protocol: TLS
+    hosts:
+    - google.com
+    tls:
+      mode: PASSTHROUGH
+---
+# Forward any requests from the gateway to the actual host.
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: direct-google-through-egress-gateway
+  namespace: istio-egress
+spec:
+  exportTo:
+  - "."
+  hosts:
+  - google.com
+  gateways:
+  - istio-egress/istio-egressgateway
+  tls:
+  - match:
+    - gateways:
+      - istio-egressgateway
+      port: 443
+      sniHosts:
+      - google.com
+    route:
+    - destination:
+        host: google.com
+        port:
+          number: 443
+      weight: 100
+---
+# Add the external host to the mesh. Make sure to 
+# ONLY export it to the gateway namespace.
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: direct-google-through-egress-gateway
+  namespace: istio-egress
+spec:
+  exportTo:
+  - "."
+  hosts:
+  - google.com
+  ports:
+  - number: 443
+    name: tls
+    protocol: TLS
+  resolution: DNS
+  location: MESH_EXTERNAL
+---

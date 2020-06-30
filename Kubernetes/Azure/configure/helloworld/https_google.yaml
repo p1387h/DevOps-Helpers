@@ -60,7 +60,8 @@ spec:
       name: tls
       protocol: TLS
     hosts:
-    - google.com
+    # Namespace/VirtualServiceHost
+    - "./google.com"
     tls:
       mode: PASSTHROUGH
 ---

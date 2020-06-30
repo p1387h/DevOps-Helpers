@@ -58,7 +58,8 @@ spec:
       name: http
       protocol: HTTP
     hosts:
-    - google.com
+    # Namespace/VirtualServiceHost
+    - "./google.com"
 ---
 # Forward any requests from the gateway to the actual host.
 apiVersion: networking.istio.io/v1alpha3

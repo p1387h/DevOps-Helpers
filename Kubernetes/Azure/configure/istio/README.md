@@ -122,3 +122,10 @@ https://istio.io/latest/docs/reference/config/networking/gateway/#Server
 Make sure to **always** use the 'exportTo: "."' flag when using ServiceEntries since they generally must not be shared across namespaces.
 https://istio.io/latest/docs/reference/config/networking/service-entry/
 > The following example demonstrates the use of a dedicated egress gateway through which all external service traffic is forwarded. The ‘exportTo’ field allows for control over the visibility of a service declaration to other namespaces in the mesh. By default, a service is exported to all namespaces. The following example restricts the visibility to the current namespace, represented by “.”, so that it cannot be used by other namespaces.
+
+### Step 5: External Services
+External services must be manually enabled in order to be accessed by pods if the "outboundTrafficPolicy" is set to "REGISTRY_ONLY". Requests are then routed to the egress gateway where they are forwarded to the external host as shown below:
+
+<p align="center">
+  <img width="511" height="352" src="https://github.com/p1387h/DevOps-Helpers/blob/master/Kubernetes/Azure/configure/istio/images/Flow.png">
+</p>

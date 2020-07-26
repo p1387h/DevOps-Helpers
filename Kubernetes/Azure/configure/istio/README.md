@@ -97,3 +97,28 @@ kubectl apply -f ./peerauthentication_mutualtls.yaml
 ```
 
 https://istio.io/docs/reference/config/security/peer_authentication/#PeerAuthentication
+
+### Step 4:
+Use VirtualServices and Gateways for routing traffic to (VirtualService) and from (Gateway) the Deployments. Gateways act as a load balancer configuration for the istio gateway controller. Make sure to limit the configuration to the corresponding namespaces via the 'exportTo: "."' flags. See the notes for when **not** to include the flag.
+
+##### Notes: App/Version
+**Always** use the following labels for all Deployments and Pods as they are needed for visualing the mesh and required for advanced routing via Destinationrules:
+- app
+- version
+
+https://istio.io/latest/docs/ops/deployment/requirements/
+> Deployments with app and version labels: We recommend adding an explicit app label and version label to deployments. Add the labels to the deployment specification of pods deployed using the Kubernetes Deployment. The app and version labels add contextual information to the metrics and telemetry Istio collects.
+> The app label: Each deployment specification should have a distinct app label with a meaningful value. The app label is used to add contextual information in distributed tracing.
+> The version label: This label indicates the version of the application corresponding to the particular deployment.
+
+##### Notes: ExportTo
+It is possible for VirtualServices to overlap one another. Limit their visibility in order to prevent these errors.
+https://istio.io/latest/docs/reference/config/analysis/ist0109/
+
+Do **not** add the flag to VirtualServices that are part of the ingress flow if the istio ingress gateway lies in another namespace since the configuration must be visible across the namespaces. See the "host" configuration part of the following server configuration:
+https://istio.io/latest/docs/reference/config/networking/gateway/#Server
+> NOTE: Only virtual services exported to the gateway’s namespace (e.g., exportTo value of *) can be referenced. Private configurations (e.g., exportTo set to .) will not be available. Refer to the exportTo setting in VirtualService, DestinationRule, and ServiceEntry configurations for details.
+
+Make sure to **always** use the 'exportTo: "."' flag when using ServiceEntries since they generally must not be shared across namespaces.
+https://istio.io/latest/docs/reference/config/networking/service-entry/
+> The following example demonstrates the use of a dedicated egress gateway through which all external service traffic is forwarded. The ‘exportTo’ field allows for control over the visibility of a service declaration to other namespaces in the mesh. By default, a service is exported to all namespaces. The following example restricts the visibility to the current namespace, represented by “.”, so that it cannot be used by other namespaces.

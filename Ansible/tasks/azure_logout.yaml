@@ -1,0 +1,3 @@
+# Log out of an existing Azure CLI session.
+- name: "Logging out of the az CLI"
+  shell: az logout

@@ -1,0 +1,54 @@
+# Requirements for this playbook:
+# Tools:
+#   - terraform
+#   - az CLI
+# A configuration.secret.yaml in the following format:
+#   # Azure information.
+#   azure_username: XXXXX
+#   azure_password: XXXXX
+#   azure_client_id: XXXXX
+#   azure_client_secret: XXXXX
+#   azure_subscription_id: XXXXX
+#   azure_tenant_id: XXXXX
+
+- name: "Setting up an aks environment with istio and different testing applications"
+  hosts: localhost
+  connection: local
+  vars:
+    # Different modes are:
+    # - USERNAME_PASSWORD
+    # - SERVICE_PRINCIPAL
+    mode: "USERNAME_PASSWORD"
+    aks_project_dir: "../Kubernetes/Azure/deploy"
+  vars_files:
+      - ./configuration.secret.yaml
+  tasks:
+  
+  # Make sure all other needed variables are loaded at the beginning.
+  - name: "Verifying the existence of all other needed variables"
+    assert:
+      that:
+        - mode is defined
+        # Azure information.
+        - azure_tenant_id is defined
+
+  # Log into the Azure CLI.
+  - import_tasks: ./tasks/azure_login.yaml
+    vars:
+      login_mode: "{{ mode }}"
+      login_azure_username: "{{ azure_username }}"
+      login_azure_password: "{{ azure_password }}"
+      login_azure_subscription_id: "{{ azure_subscription_id }}"
+      login_azure_client_id: "{{ azure_client_id }}"
+      login_azure_client_secret: "{{ azure_client_secret }}"
+      login_azure_tenant_id: "{{ azure_tenant_id }}"
+
+  # Destroy the AKS.
+  - name: "Destroying the AKS"
+    terraform:
+      project_path: "{{ aks_project_dir }}"
+      state: absent
+    register: "terraform_output"
+
+  # Log out of the Azure CLI.
+  - import_tasks: ./tasks/azure_logout.yaml

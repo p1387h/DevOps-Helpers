@@ -1,0 +1,46 @@
+# Throw an error when mode is not present.
+- name: "Throwing error due to missing variables"
+  fail: msg="This play requires a value for 'login_mode'"
+  when: login_mode is not defined
+
+# Verify login credentials: username and password.
+- name: "Verifying that the needed login credentials are present"
+  assert:
+    that:
+      - login_azure_username is defined
+      - login_azure_password is defined
+      - login_azure_subscription_id is defined
+  when: login_mode == "USERNAME_PASSWORD"
+
+# Verify login credentials: service principal
+- name: "Verifying that the needed login credentials are present"
+  assert:
+    that:
+      - login_azure_client_id is defined
+      - login_azure_client_secret is defined
+      - login_azure_tenant_id is defined
+  when: login_mode == "SERVICE_PRINCIPAL"
+
+# Login: username password.
+- name: "Logging into the az CLI via username and password"
+  environment:
+    USERNAME: "{{ login_azure_username }}"
+    PASSWORD: "{{ login_azure_password }}"
+  shell: az login -u $USERNAME -p $PASSWORD
+  when: login_mode == "USERNAME_PASSWORD"
+
+# Set the subscription for the user.
+- name: "Setting subscription"
+  environment:
+    SUBSCRIPTION_ID: "{{ login_azure_subscription_id }}"
+  shell: az account set -s $SUBSCRIPTION_ID
+  when: login_mode == "USERNAME_PASSWORD"
+
+# Login: service principal.
+- name: "Logging into the az CLI via service principal"
+  environment:
+    TENANT_ID: "{{ login_azure_tenant_id }}"
+    APPLICATION_ID: "{{ login_azure_client_id }}"
+    APPLICATION_SECRET: "{{ login_azure_client_secret }}"
+  shell: az login --service-principal -t $TENANT_ID -u $APPLICATION_ID -p $APPLICATION_SECRET
+  when: login_mode == "SERVICE_PRINCIPAL"

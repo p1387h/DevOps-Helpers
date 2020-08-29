@@ -8,3 +8,4 @@
 # Configuration.
 **kube.config
 **.temp.yaml
+**.secret.yaml

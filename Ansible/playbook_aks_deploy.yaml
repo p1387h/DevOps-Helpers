@@ -1,0 +1,103 @@
+# Requirements for this playbook:
+# Tools:
+#   - terraform
+#   - az CLI
+#   - helm
+#   - kubectl
+#   - istioctl
+# The service principal requires the following api permissions:
+#   - Application.ReadWrite.All OR Application.ReadWrite.OwnedBy
+# A configuration.secret.yaml in the following format:
+#   # Azure information.
+#   azure_username: XXXXX
+#   azure_password: XXXXX
+#   azure_client_id: XXXXX
+#   azure_client_secret: XXXXX
+#   azure_subscription_id: XXXXX
+#   azure_tenant_id: XXXXX
+#   # Grafana credentials.
+#   grafana_username: XXXXX
+#   grafana_password: XXXXX
+#   # Kiali credentials.
+#   kiali_username: XXXXX
+#   kiali_password: XXXXX
+
+- name: "Setting up an aks environment with istio and different testing applications"
+  hosts: localhost
+  connection: local
+  vars:
+    # Different modes are:
+    # - USERNAME_PASSWORD
+    # - SERVICE_PRINCIPAL
+    mode: "USERNAME_PASSWORD"
+    aks_project_dir: "../Kubernetes/Azure/deploy"
+    kubcetl_config: "./kube.config"
+  vars_files:
+      - ./configuration.secret.yaml
+  tasks:
+
+  # Make sure all other needed variables are loaded at the beginning.
+  - name: "Verifying the existence of all other needed variables"
+    assert:
+      that:
+        - mode is defined
+        # Azure information.
+        - azure_tenant_id is defined
+        # Grafana credentials.
+        - grafana_username is defined
+        - grafana_password is defined
+        # Kiali credentials.
+        - kiali_username is defined
+        - kiali_password is defined
+
+  # Log into the Azure CLI.
+  - import_tasks: ./tasks/azure_login.yaml
+    vars:
+      login_mode: "{{ mode }}"
+      login_azure_username: "{{ azure_username }}"
+      login_azure_password: "{{ azure_password }}"
+      login_azure_subscription_id: "{{ azure_subscription_id }}"
+      login_azure_client_id: "{{ azure_client_id }}"
+      login_azure_client_secret: "{{ azure_client_secret }}"
+      login_azure_tenant_id: "{{ azure_tenant_id }}"
+
+  # Deploy the AKS.
+  - name: "Deploying the AKS into the Azure cloud"
+    terraform:
+      project_path: "{{ aks_project_dir }}"
+      state: present
+      force_init: true
+    register: "terraform_output"
+
+  # Show the output values of the terraform task.
+  - name: "Displaying terraform output"
+    debug: var=terraform_output.outputs
+  
+  # Log out of the Azure CLI.
+  - import_tasks: ./tasks/azure_logout.yaml
+
+  # Log into the Azure CLI as the cluster admin.
+  - import_tasks: ./tasks/azure_login.yaml
+    vars:
+      login_mode: "SERVICE_PRINCIPAL"
+      login_azure_client_id: "{{ terraform_output.outputs.admin_app_id.value }}"
+      login_azure_client_secret: "{{ terraform_output.outputs.admin_app_secret.value }}"
+      login_azure_tenant_id: "{{ azure_tenant_id }}"
+
+  # Get the admin credentials for the Kubernetes instance and store
+  # it in an accessible file.
+  - name: "Getting kubectl configuration."
+    environment:
+      CLUSTERNAME: "{{ terraform_output.outputs.aks_name.value }}"
+      RESOURCE_GROUP: "{{ terraform_output.outputs.resource_group_resources.value }}"
+      KUBE_CONFIG_LOCATION: "{{ kubcetl_config }}"
+    shell: az aks get-credentials -n $CLUSTERNAME -g $RESOURCE_GROUP --file - --admin > $KUBE_CONFIG_LOCATION
+  
+  # Log out of the Azure CLI.
+  - import_tasks: ./tasks/azure_logout.yaml
+
+  # Enable the dashboard.
+  # - name: "Enabling the dashboard for the kubernetes-dashboard service account"
+  #   environment:
+  #     KUBECONFIG: "{{ kubcetl_config }}"
+  #   shell: kubectl apply -f ../Kubernetes/Azure/configure/dashboard/dashboard_adminuser.yaml

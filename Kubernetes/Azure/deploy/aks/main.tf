@@ -72,7 +72,7 @@ resource "azurerm_kubernetes_cluster" "cluster" {
   resource_group_name = azurerm_resource_group.resource_group.name
   node_resource_group = local.node_resource_group_name
   dns_prefix          = "${local.combined_name}-aks"
-  kubernetes_version  = "1.15.10"
+  kubernetes_version  = var.aks_version
 
   default_node_pool {
     name            = "default"

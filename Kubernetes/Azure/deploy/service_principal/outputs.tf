@@ -11,7 +11,7 @@ output "app_application_id" {
 }
 
 output "app_password" {
-  value       = random_password.password
+  value       = random_password.password.result
   description = "The password of the created service application."
 }
 

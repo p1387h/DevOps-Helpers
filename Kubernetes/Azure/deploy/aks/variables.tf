@@ -3,6 +3,11 @@ variable "name" {
   description = "The name of the AKS and all related resources."
 }
 
+variable "aks_version" {
+  type        = string
+  description = "The Kubernetes cluster version."
+}
+
 variable "location" {
   type        = string
   description = "The location the cluster is being created in."

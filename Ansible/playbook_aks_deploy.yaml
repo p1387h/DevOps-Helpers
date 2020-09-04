@@ -95,9 +95,3 @@
   
   # Log out of the Azure CLI.
   - import_tasks: ./tasks/azure_logout.yaml
-
-  # Enable the dashboard.
-  # - name: "Enabling the dashboard for the kubernetes-dashboard service account"
-  #   environment:
-  #     KUBECONFIG: "{{ kubcetl_config }}"
-  #   shell: kubectl apply -f ../Kubernetes/Azure/configure/dashboard/dashboard_adminuser.yaml

@@ -31,6 +31,7 @@
     # - SERVICE_PRINCIPAL
     mode: "USERNAME_PASSWORD"
     aks_project_dir: "../Kubernetes/Azure/deploy"
+    istio_project_dir: "../Kubernetes/Azure/configure/istio"
     kubcetl_config: "./kube.config"
   vars_files:
       - ./configuration.secret.yaml
@@ -88,10 +89,37 @@
   # it in an accessible file.
   - name: "Getting kubectl configuration."
     environment:
-      CLUSTERNAME: "{{ terraform_output.outputs.aks_name.value }}"
+      CLUSTERNAME: "{{ terraform_output.outputs.aks_resource_name.value }}"
       RESOURCE_GROUP: "{{ terraform_output.outputs.resource_group_resources.value }}"
       KUBE_CONFIG_LOCATION: "{{ kubcetl_config }}"
     shell: az aks get-credentials -n $CLUSTERNAME -g $RESOURCE_GROUP --file - --admin > $KUBE_CONFIG_LOCATION
   
   # Log out of the Azure CLI.
   - import_tasks: ./tasks/azure_logout.yaml
+
+  # Copy the file in order to replace placeholders in it.
+  - name: "Making a changeable copy of the istio configuration."
+    copy:
+      src: "{{ istio_project_dir }}/istiooperator_configuration.yaml"
+      dest: "{{ istio_project_dir }}/istiooperator_configuration.temp.yaml"
+
+  # Replace: $IP_RESOURCEGROUP with terraform value.
+  - name: "Replacing placeholder '$IP_RESOURCEGROUP' with the resource group name for the general resources."
+    replace:
+      path: "{{ istio_project_dir }}/istiooperator_configuration.temp.yaml"
+      regexp: '\$IP_RESOURCEGROUP'
+      replace: '{{ terraform_output.outputs.resource_group_resources.value }}'
+
+  # Replace: $LOADBALANCER_IP with terraform value.
+  - name: "Replacing placeholder '$LOADBALANCER_IP' with the external cluster ip."
+    replace:
+      path: "{{ istio_project_dir }}/istiooperator_configuration.temp.yaml"
+      regexp: '\$LOADBALANCER_IP'
+      replace: '{{ terraform_output.outputs.public_ip.value }}'
+
+  # Replace: $LOADBALANCER_DNS with terraform value.
+  - name: "Replacing placeholder '$LOADBALANCER_DNS' with the external cluster dns."
+    replace:
+      path: "{{ istio_project_dir }}/istiooperator_configuration.temp.yaml"
+      regexp: '\$LOADBALANCER_DNS'
+      replace: '{{ terraform_output.outputs.aks_name.value }}'

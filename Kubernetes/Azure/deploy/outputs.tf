@@ -18,6 +18,10 @@ output "resource_group_nodes" {
   value = module.aks.resource_group_nodes
 }
 
+output "aks_resource_name" {
+  value = module.aks.aks_resource_name
+}
+
 output "aks_name" {
   value = module.aks.name
 }

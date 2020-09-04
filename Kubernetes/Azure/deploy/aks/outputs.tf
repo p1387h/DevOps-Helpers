@@ -18,8 +18,12 @@ output "resource_group_nodes" {
   value = local.node_resource_group_name
 }
 
-output "name" {
+output "aks_resource_name" {
   value = azurerm_kubernetes_cluster.cluster.name
+}
+
+output "name" {
+  value = local.combined_name
 }
 
 # ----- Service Principal ----------------------------------

@@ -1,38 +1,23 @@
 apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
 spec:
-  addonComponents:
-    kiali:
-      enabled: true
-      k8s:
-        replicaCount: 1
-    grafana:
-      enabled: true
-    tracing:
-      enabled: true
   components:
     egressGateways:
       - enabled: true
         namespace: istio-egress
-        k8s:
-          replicaCount: 3
+        name: istio-egressgateway
     ingressGateways:
       - enabled: true
         namespace: istio-ingress
+        name: istio-ingressgateway
         k8s:
-          replicaCount: 3
           serviceAnnotations:
             service.beta.kubernetes.io/azure-load-balancer-resource-group: $IP_RESOURCEGROUP
+            # Add the dns name to the azure ip resource. This adds ".<region>.cloudapp.azure.com" 
+            # to the value provided here.
+            service.beta.kubernetes.io/azure-dns-label-name: $LOADBALANCER_DNS
           service:
             loadBalancerIP: $LOADBALANCER_IP
-            ports:
-              -
-                name: http2
-                port: 80
-                targetPort: 80
-              -
-                name: https
-                port: 443
   meshConfig:
     # Do not allow the sidecar to send traffic to external sources 
     # unless they are defined in the service mesh.
@@ -42,8 +27,6 @@ spec:
     accessLogFile: "/dev/stdout"
     # JSON or TEXT as logging encoding.
     accessLogEncoding: JSON
-    # json_format or typed_json_format as logging format.
-    accessLogFormat: json_format
   values:
     global:
       # Ensure that the Istio pods are only scheduled to run on Linux 

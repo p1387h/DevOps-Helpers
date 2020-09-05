@@ -5,6 +5,10 @@
 #   - helm
 #   - kubectl
 #   - istioctl
+#   - for the k8s module:
+#     - python
+#     - openshift
+#     - PyYAML
 # The service principal requires the following api permissions:
 #   - Application.ReadWrite.All OR Application.ReadWrite.OwnedBy
 # A configuration.secret.yaml in the following format:
@@ -31,8 +35,9 @@
     # - SERVICE_PRINCIPAL
     mode: "USERNAME_PASSWORD"
     aks_project_dir: "../Kubernetes/Azure/deploy"
+    kubectl_config: "./kube.config"
     istio_project_dir: "../Kubernetes/Azure/configure/istio"
-    kubcetl_config: "./kube.config"
+    istio_config_name: "istiooperator_configuration.temp.yaml"
   vars_files:
       - ./configuration.secret.yaml
   tasks:
@@ -43,6 +48,11 @@
       that:
         - mode is defined
         # Azure information.
+        - azure_username is defined
+        - azure_password is defined
+        - azure_subscription_id is defined
+        - azure_client_id is defined
+        - azure_client_secret is defined
         - azure_tenant_id is defined
         # Grafana credentials.
         - grafana_username is defined
@@ -50,6 +60,11 @@
         # Kiali credentials.
         - kiali_username is defined
         - kiali_password is defined
+        # File paths and names.
+        - aks_project_dir is defined
+        - kubectl_config is defined
+        - istio_project_dir is defined
+        - istio_config_name is defined
 
   # Log into the Azure CLI.
   - import_tasks: ./tasks/azure_login.yaml
@@ -91,35 +106,93 @@
     environment:
       CLUSTERNAME: "{{ terraform_output.outputs.aks_resource_name.value }}"
       RESOURCE_GROUP: "{{ terraform_output.outputs.resource_group_resources.value }}"
-      KUBE_CONFIG_LOCATION: "{{ kubcetl_config }}"
+      KUBE_CONFIG_LOCATION: "{{ kubectl_config }}"
     shell: az aks get-credentials -n $CLUSTERNAME -g $RESOURCE_GROUP --file - --admin > $KUBE_CONFIG_LOCATION
   
   # Log out of the Azure CLI.
   - import_tasks: ./tasks/azure_logout.yaml
+  
+  # # Create the istio ingressgateway namespace.
+  - name: "Creating the ingressgateway namespace."
+    k8s:
+      src : "{{ istio_project_dir }}/namespace_ingressgateway.yaml"
+      kubeconfig: "{{ kubectl_config }}"
+      state: present
 
-  # Copy the file in order to replace placeholders in it.
-  - name: "Making a changeable copy of the istio configuration."
-    copy:
-      src: "{{ istio_project_dir }}/istiooperator_configuration.yaml"
-      dest: "{{ istio_project_dir }}/istiooperator_configuration.temp.yaml"
+  # Create the istio egressgateway namespace.
+  - name: "Creating the egressgateway namespace."
+    k8s:
+      src : "{{ istio_project_dir }}/namespace_egressgateway.yaml"
+      kubeconfig: "{{ kubectl_config }}"
+      state: present
 
-  # Replace: $IP_RESOURCEGROUP with terraform value.
-  - name: "Replacing placeholder '$IP_RESOURCEGROUP' with the resource group name for the general resources."
-    replace:
-      path: "{{ istio_project_dir }}/istiooperator_configuration.temp.yaml"
-      regexp: '\$IP_RESOURCEGROUP'
-      replace: '{{ terraform_output.outputs.resource_group_resources.value }}'
+  # Prepare the istio configuration file.
+  - import_tasks: ./tasks/istio_prepare_configuration.yaml
+    vars:
+      istio_configuration_project_dir: "{{ istio_project_dir }}"
+      istio_configuration_file_name: "{{ istio_config_name }}"
+      loadbalancer_ip_resource_group: "{{ terraform_output.outputs.resource_group_resources.value }}"
+      loadbalancer_ip: "{{ terraform_output.outputs.public_ip.value }}"
+      loadbalancer_dns: "{{ terraform_output.outputs.aks_name.value }}"
+  
+  # Install istio on the cluster.
+  - name: "Installing istio."
+    shell: "istioctl install -f {{ istio_project_dir }}/{{ istio_config_name }} -c {{ kubectl_config }}"
+  
+  # Label the created istio-system namespace in order to apply 
+  # kubernetes network policies. Do the same for the kube-system 
+  # namespace.
+  - name: Adding label to namespace 'istio-system'.
+    k8s:
+      kubeconfig: "{{ kubectl_config }}"
+      api_version: v1
+      namespace: istio-system
+      kind: namespace
+      name: istio-system
+      state: present
+      resource_definition:
+        metadata:
+          labels:
+            istio: system
+  - name: Adding label to namespace 'kube-system'.
+    k8s:
+      kubeconfig: "{{ kubectl_config }}"
+      api_version: v1
+      namespace: kube-system
+      kind: namespace
+      name: kube-system
+      state: present
+      resource_definition:
+        metadata:
+          labels:
+            ns: kube-system
 
-  # Replace: $LOADBALANCER_IP with terraform value.
-  - name: "Replacing placeholder '$LOADBALANCER_IP' with the external cluster ip."
-    replace:
-      path: "{{ istio_project_dir }}/istiooperator_configuration.temp.yaml"
-      regexp: '\$LOADBALANCER_IP'
-      replace: '{{ terraform_output.outputs.public_ip.value }}'
+  # Get the labels to check them later on.
+  - name: "Verifying the label in 'istio-system'."
+    k8s_info:
+      kubeconfig: "{{ kubectl_config }}"
+      api_version: v1
+      namespace: istio-system
+      kind: namespace
+      name: istio-system
+    register: istio_system_labels
+  - name: "Verifying the label in 'kube-system'."
+    k8s_info:
+      kubeconfig: "{{ kubectl_config }}"
+      api_version: v1
+      namespace: kube-system
+      kind: namespace
+      name: kube-system
+    register: kube_system_labels
 
-  # Replace: $LOADBALANCER_DNS with terraform value.
-  - name: "Replacing placeholder '$LOADBALANCER_DNS' with the external cluster dns."
-    replace:
-      path: "{{ istio_project_dir }}/istiooperator_configuration.temp.yaml"
-      regexp: '\$LOADBALANCER_DNS'
-      replace: '{{ terraform_output.outputs.aks_name.value }}'
+  # Output the labels in order to be able to manually verify them.
+  - name: "Displaying created labels"
+    debug: var={{ item }}.metadata.labels
+    loop: "{{ [istio_system_labels.resources, kube_system_labels.resources] | flatten(1) }}"
+
+  # Enforce mutual tls in istio.
+  - name: "Enforcing mutual tls in istio."
+    k8s:
+      src : "{{ istio_project_dir }}/peerauthentication_mutualtls.yaml"
+      kubeconfig: "{{ kubectl_config }}"
+      state: present

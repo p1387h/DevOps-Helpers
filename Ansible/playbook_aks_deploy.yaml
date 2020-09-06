@@ -4,7 +4,7 @@
 #   - az CLI
 #   - helm
 #   - kubectl
-#   - istioctl
+#   - istioctl 1.7
 #   - for the k8s module:
 #     - python
 #     - openshift

@@ -23,6 +23,42 @@ spec:
     15020:
       mode: DISABLE
 ---
+# Do NOT allow any outgoing connections by default that are not the following target:
+# - istio-system for lookups (certs, etc.)
+# - istio-egressgateway (outgoing connections if any)
+# - kubernetes dns
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-to-istio-and-kube-dns
+  namespace: example-v1
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          ns: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+    ports:
+    - protocol: UDP
+      port: 53
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          istio: system
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          istio: egress
+      podSelector:
+        matchLabels:
+          istio: egressgateway
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:

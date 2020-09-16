@@ -37,6 +37,7 @@
     aks_project_dir: "../Kubernetes/Azure/deploy"
     kubectl_config: "./kube.config"
     istio_project_dir: "../Kubernetes/Azure/configure/istio"
+    prometheus_project_dir: "../Kubernetes/Azure/configure/prometheus"
   vars_files:
       - ./configuration.secret.yaml
   tasks:
@@ -119,3 +120,10 @@
       istio_loadbalancer_ip_resource_group: "{{ terraform_output.outputs.resource_group_resources.value }}"
       istio_loadbalancer_ip: "{{ terraform_output.outputs.public_ip.value }}"
       istio_loadbalancer_dns: "{{ terraform_output.outputs.aks_name.value }}"
+
+  # Link the Prometheus log aggregation with Azure Monitor.
+  - name: "Linking Prometheus logging with Azure Monitor."
+    k8s:
+      src : "{{ prometheus_project_dir }}/container-azm-ms-agentconfig.yaml"
+      kubeconfig: "{{ kubectl_config }}"
+      state: present

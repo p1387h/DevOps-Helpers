@@ -1,0 +1,16 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: istio-egress
+spec:
+  selector:
+    matchLabels:
+      istio: ingressgateway
+  mtls:
+    mode: STRICT
+  # Disable for prometheus scraping (istio annotation: prometheus.io/port)
+  # See: peerauthentication_mutualtls.yaml
+  portLevelMtls:
+    15090:
+      mode: DISABLE

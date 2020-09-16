@@ -54,12 +54,6 @@
         - azure_client_id is defined
         - azure_client_secret is defined
         - azure_tenant_id is defined
-        # Grafana credentials.
-        - grafana_username is defined
-        - grafana_password is defined
-        # Kiali credentials.
-        - kiali_username is defined
-        - kiali_password is defined
         # File paths and names.
         - aks_project_dir is defined
         - kubectl_config is defined

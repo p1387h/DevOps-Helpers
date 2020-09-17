@@ -1,3 +1,23 @@
+# Add the external host to the mesh. Make sure to 
+# ONLY export it to the namespace in which the 
+# requests are allowed.
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: direct-google-through-egress-gateway
+  namespace: example-v1
+spec:
+  exportTo:
+  - "."
+  hosts:
+  - google.com
+  ports:
+  - number: 443
+    name: tls
+    protocol: TLS
+  resolution: DNS
+  location: MESH_EXTERNAL
+---
 # Forward any requests to the external host to the gateway.
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService

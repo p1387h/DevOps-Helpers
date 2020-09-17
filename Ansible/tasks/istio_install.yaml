@@ -80,7 +80,7 @@
     resource_definition:
       metadata:
         labels:
-          ns: kube-system
+          kube: system
 
 # Get the labels to check them later on.
 - name: "Verifying the label in 'istio-system'."

@@ -14,7 +14,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      istio: helloworld-v2
+      app: helloworld-v2
   mtls:
     mode: STRICT
   # Disable for prometheus scraping (istio annotation: prometheus.io/port)

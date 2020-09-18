@@ -40,7 +40,7 @@ spec:
   - to:
     - namespaceSelector:
         matchLabels:
-          kube: system
+          ns: kube-system
       podSelector:
         matchLabels:
           k8s-app: kube-dns
@@ -50,11 +50,11 @@ spec:
   - to:
     - namespaceSelector:
         matchLabels:
-          istio: system
+          ns: istio-system
   - to:
     - namespaceSelector:
         matchLabels:
-          istio: egress
+          ns: istio-egress
       podSelector:
         matchLabels:
           istio: egressgateway

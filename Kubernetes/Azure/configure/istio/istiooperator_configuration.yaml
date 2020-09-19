@@ -26,4 +26,7 @@ spec:
     # Enable logging for the sidecars.
     accessLogFile: "/dev/stdout"
     # JSON or TEXT as logging encoding.
-    accessLogEncoding: JSON
+    accessLogEncoding: TEXT
+    # Do not merge the envoy metrics with the application ones. Requires the scraper to
+    # use mtls when accessing the application metrics. Envoy ones are exposed in plain text.
+    enablePrometheusMerge: false

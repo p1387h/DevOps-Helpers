@@ -6,23 +6,6 @@ metadata:
     istio-injection: enabled
     ns: example-v1
 ---
-apiVersion: security.istio.io/v1beta1
-kind: PeerAuthentication
-metadata:
-  name: default
-  namespace: example-v1
-spec:
-  selector:
-    matchLabels:
-      app: helloworld-v1
-  mtls:
-    mode: STRICT
-  # Disable for prometheus scraping (istio annotation: prometheus.io/port)
-  # See: peerauthentication_mutualtls.yaml
-  portLevelMtls:
-    15020:
-      mode: DISABLE
----
 # Do NOT allow any outgoing connections by default that are not the following target:
 # - istio-system for lookups (certs, etc.)
 # - istio-egressgateway (outgoing connections if any)

@@ -106,22 +106,8 @@
   loop: "{{ [istio_system_labels.resources, kube_system_labels.resources] | flatten(1) }}"
 
 # Enforce mutual tls in istio.
-# Note:
-# Allow accessing the metric endpoints without it since Azure Monitor will otherwise 
-# not be able to scrape these. Make sure to also allow any other workloads according 
-# to the specified 'prometheus.io/port' in the resource.
 - name: "Enforcing mutual tls in istio."
   k8s:
     src : "{{ istio_configuration_project_dir }}/peerauthentication_mutualtls.yaml"
-    kubeconfig: "{{ istio_kubectl_config }}"
-    state: present
-- name: "Allow scraping the metric endpoint for: istio-egressgateway"
-  k8s:
-    src : "{{ istio_configuration_project_dir }}/peerauthentication_egressgateway.yaml"
-    kubeconfig: "{{ istio_kubectl_config }}"
-    state: present
-- name: "Allow scraping the metric endpoint for: istio-ingressgateway"
-  k8s:
-    src : "{{ istio_configuration_project_dir }}/peerauthentication_ingressgateway.yaml"
     kubeconfig: "{{ istio_kubectl_config }}"
     state: present

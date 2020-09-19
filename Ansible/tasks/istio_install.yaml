@@ -68,7 +68,7 @@
     resource_definition:
       metadata:
         labels:
-          istio: system
+          ns: istio-system
 - name: "Adding label to namespace 'kube-system'."
   k8s:
     kubeconfig: "{{ istio_kubectl_config }}"
@@ -80,7 +80,7 @@
     resource_definition:
       metadata:
         labels:
-          kube: system
+          ns: kube-system
 
 # Get the labels to check them later on.
 - name: "Verifying the label in 'istio-system'."

@@ -6,6 +6,15 @@ metadata:
     istio-injection: enabled
     ns: example-v1
 ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-egress
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+---
 # Do NOT allow any outgoing connections by default that are not the following target:
 # - istio-system for lookups (certs, etc.)
 # - istio-egressgateway (outgoing connections if any)

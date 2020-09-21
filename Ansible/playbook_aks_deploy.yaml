@@ -37,7 +37,7 @@
     aks_project_dir: "../Kubernetes/Azure/deploy"
     kubectl_config: "./kube.config"
     istio_project_dir: "../Kubernetes/Azure/configure/istio"
-    prometheus_project_dir: "../Kubernetes/Azure/configure/prometheus"
+    prometheus_project_dir: "../Kubernetes/Azure/configure/prometheus-stack"
   vars_files:
       - ./configuration.secret.yaml
   tasks:
@@ -105,12 +105,26 @@
   # Log out of the Azure CLI.
   - import_tasks: ./tasks/azure_logout.yaml
   
+  # Label the kube-system namespace in order to match all other namespaces.
+  - name: "Adding label to namespace 'kube-system'."
+    k8s:
+      kubeconfig: "{{ kubectl_config }}"
+      api_version: v1
+      namespace: kube-system
+      kind: namespace
+      name: kube-system
+      state: present
+      resource_definition:
+        metadata:
+          labels:
+            ns: kube-system
+
   # Install istio on the cluster
   - import_tasks: ./tasks/istio_install.yaml
     vars:
       istio_kubectl_config: "{{ kubectl_config }}"
       istio_configuration_project_dir: "{{ istio_project_dir }}"
-      istio_configuration_file_name: "istiooperator_configuration.temp.yaml"
+      istio_configuration_file_name: "istiooperator_istiosystem.temp.yaml"
       istio_loadbalancer_ip_resource_group: "{{ terraform_output.outputs.resource_group_resources.value }}"
       istio_loadbalancer_ip: "{{ terraform_output.outputs.public_ip.value }}"
       istio_loadbalancer_dns: "{{ terraform_output.outputs.aks_name.value }}"

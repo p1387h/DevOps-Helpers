@@ -1,7 +1,14 @@
 apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
+metadata:
+  namespace: istio-system
+  name: istio-operator
 spec:
+  profile: default
   components:
+    pilot:
+      - k8s:
+          replicaCount: 3
     egressGateways:
       - enabled: true
         namespace: istio-egress

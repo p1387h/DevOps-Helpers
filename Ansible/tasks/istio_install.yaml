@@ -9,6 +9,24 @@
       - istio_loadbalancer_ip is defined
       - istio_loadbalancer_dns is defined
 
+# Install the istio-operator controller.
+- name: "Installing the istio-operator controller."
+  shell: "istioctl operator init -c {{ istio_kubectl_config }}"
+
+# Restrict access to the istio-operator controller via a network policy.
+- name: "Creating the istio-operator network policy."
+  k8s:
+    src : "{{ istio_configuration_project_dir }}/networkpolicy_istiooperator.yaml"
+    kubeconfig: "{{ istio_kubectl_config }}"
+    state: present
+  
+# Create the istio-system namespace.
+- name: "Creating the egressgateway namespace."
+  k8s:
+    src : "{{ istio_configuration_project_dir }}/namespace_istiosystem.yaml"
+    kubeconfig: "{{ istio_kubectl_config }}"
+    state: present
+
 # Create the istio ingressgateway namespace.
 - name: "Creating the ingressgateway namespace."
   k8s:
@@ -23,10 +41,10 @@
     kubeconfig: "{{ istio_kubectl_config }}"
     state: present
 
-  # Copy the file in order to replace placeholders in it.
+# Copy the file in order to replace placeholders in it.
 - name: "Making a changeable copy of the istio configuration."
   copy:
-    src: "{{ istio_configuration_project_dir }}/istiooperator_configuration.yaml"
+    src: "{{ istio_configuration_project_dir }}/istiooperator_istiosystem.yaml"
     dest: "{{ istio_configuration_project_dir }}/{{ istio_configuration_file_name }}"
 
 # Replace: $IP_RESOURCEGROUP with terraform value.
@@ -49,61 +67,13 @@
     path: "{{ istio_configuration_project_dir }}/{{ istio_configuration_file_name }}"
     regexp: '\$LOADBALANCER_DNS'
     replace: '{{ istio_loadbalancer_dns }}'
-  
-# Install istio on the cluster.
-- name: "Installing istio."
-  shell: "istioctl install -f {{ istio_configuration_project_dir }}/{{ istio_configuration_file_name }} -c {{ istio_kubectl_config }}"
 
-# Label the created istio-system namespace in order to apply 
-# kubernetes network policies. Do the same for the kube-system 
-# namespace.
-- name: "Adding label to namespace 'istio-system'."
+# Add the istio-operator.
+- name: "Creating the istio-operator."
   k8s:
+    src : "{{ istio_configuration_project_dir }}/{{ istio_configuration_file_name }}"
     kubeconfig: "{{ istio_kubectl_config }}"
-    api_version: v1
-    namespace: istio-system
-    kind: namespace
-    name: istio-system
     state: present
-    resource_definition:
-      metadata:
-        labels:
-          ns: istio-system
-- name: "Adding label to namespace 'kube-system'."
-  k8s:
-    kubeconfig: "{{ istio_kubectl_config }}"
-    api_version: v1
-    namespace: kube-system
-    kind: namespace
-    name: kube-system
-    state: present
-    resource_definition:
-      metadata:
-        labels:
-          ns: kube-system
-
-# Get the labels to check them later on.
-- name: "Verifying the label in 'istio-system'."
-  k8s_info:
-    kubeconfig: "{{ istio_kubectl_config }}"
-    api_version: v1
-    namespace: istio-system
-    kind: namespace
-    name: istio-system
-  register: istio_system_labels
-- name: "Verifying the label in 'kube-system'."
-  k8s_info:
-    kubeconfig: "{{ istio_kubectl_config }}"
-    api_version: v1
-    namespace: kube-system
-    kind: namespace
-    name: kube-system
-  register: kube_system_labels
-
-# Output the labels in order to be able to manually verify them.
-- name: "Displaying created labels."
-  debug: var={{ item }}.metadata.labels
-  loop: "{{ [istio_system_labels.resources, kube_system_labels.resources] | flatten(1) }}"
 
 # Enforce mutual tls in istio.
 - name: "Enforcing mutual tls in istio."

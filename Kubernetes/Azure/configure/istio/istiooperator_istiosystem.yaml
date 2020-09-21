@@ -7,14 +7,20 @@ spec:
   profile: default
   components:
     pilot:
-      - k8s:
-          replicaCount: 3
+      k8s:
+        # High availability scaling.
+        hpaSpec:
+          minReplicas: 3
+          maxReplicas: 10
     egressGateways:
       - enabled: true
         namespace: istio-egress
         name: istio-egressgateway
         k8s:
-          replicaCount: 3
+          # High availability scaling.
+          hpaSpec:
+            minReplicas: 3
+            maxReplicas: 10
     ingressGateways:
       - enabled: true
         namespace: istio-ingress
@@ -27,7 +33,10 @@ spec:
             service.beta.kubernetes.io/azure-dns-label-name: $LOADBALANCER_DNS
           service:
             loadBalancerIP: $LOADBALANCER_IP
-          replicaCount: 3
+          # High availability scaling.
+          hpaSpec:
+            minReplicas: 3
+            maxReplicas: 10
   meshConfig:
     # Do not allow the sidecar to send traffic to external sources 
     # unless they are defined in the service mesh.

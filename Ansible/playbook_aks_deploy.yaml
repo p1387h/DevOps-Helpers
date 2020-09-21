@@ -5,6 +5,8 @@
 #   - helm
 #   - kubectl
 #   - istioctl 1.7
+#     - Note: Make sure to change the version tag in the prometheus-stack value 
+#       helm file as well when using a different version.
 #   - for the k8s module:
 #     - python
 #     - openshift

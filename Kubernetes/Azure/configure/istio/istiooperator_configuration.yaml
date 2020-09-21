@@ -6,6 +6,8 @@ spec:
       - enabled: true
         namespace: istio-egress
         name: istio-egressgateway
+        k8s:
+          replicaCount: 3
     ingressGateways:
       - enabled: true
         namespace: istio-ingress
@@ -18,6 +20,7 @@ spec:
             service.beta.kubernetes.io/azure-dns-label-name: $LOADBALANCER_DNS
           service:
             loadBalancerIP: $LOADBALANCER_IP
+          replicaCount: 3
   meshConfig:
     # Do not allow the sidecar to send traffic to external sources 
     # unless they are defined in the service mesh.

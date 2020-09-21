@@ -1,8 +1,17 @@
 prometheusOperator:
   # Manually create the CRs beforehand.
   createCustomResource: false
+alertmanager:
+  alertmanagerSpec:
+    replicas: 3
+    # Try to place each pod on a different node.
+    podAntiAffinity: soft
 prometheus:
   prometheusSpec:
+    replicas: 3
+    # Try to place each pod on a different node.
+    podAntiAffinity: soft
+    # At least an istio-proxy side car is needed for acessing the application pod metrics.
     containers:
       # # Create certificates that can be used for connecting via mtls with istio envoys.
       # # See:

@@ -1,0 +1,75 @@
+# Verify that all needed variables are set.
+- name: "Verifying the existence of all needed variables."
+  assert:
+    that:
+      - prometheus_kubectl_config is defined
+      - prometheus_configuration_project_dir is defined
+
+# Create the prometheus-stack namespace.
+- name: "Creating the prometheus-stack namespace."
+  k8s:
+    src : "{{ prometheus_configuration_project_dir }}/namespace_prometheusstack.yaml"
+    kubeconfig: "{{ prometheus_kubectl_config }}"
+    state: present
+
+# Restrict access to the resources inside the prometheus-stack namespac via network policies.
+- name: "Creating prometheus-stack network policies."
+  k8s:
+    src : "{{ prometheus_configuration_project_dir }}/networkpolicy_prometheusstack.yaml"
+    kubeconfig: "{{ prometheus_kubectl_config }}"
+    state: present
+
+# Add the prometheus community repo.
+- name: "Adding the 'promethues community' repo to list of known ones."
+  shell: "helm repo add prometheus-community https://prometheus-community.github.io/helm-charts"
+
+# Add the stable repo (should already be present).
+- name: "Adding the 'stable' repo to list of known ones."
+  shell: "helm repo add stable https://kubernetes-charts.storage.googleapis.com/"
+
+# Update the repos.
+- name: "Updating repos."
+  shell: "helm repo update"
+
+# Create CRD directory.
+- name: "Creating the CRD download directory."
+  file: 
+    state: directory
+    path: "{{ prometheus_configuration_project_dir }}/crds"
+
+# Download the CRD defintions.
+- name: "Download the CRD defintions."
+  get_url:
+    url: "{{ item.url }}"
+    dest: "{{ prometheus_configuration_project_dir }}/crds/{{ item.name }}"
+  loop:
+    - url: "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.38/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagers.yaml"
+      name: "monitoring.coreos.com_alertmanagers.temp.yaml"
+    - url: "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.38/example/prometheus-operator-crd/monitoring.coreos.com_podmonitors.yaml"
+      name: "monitoring.coreos.com_podmonitors.temp.yaml"
+    - url: "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.38/example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml"
+      name: "monitoring.coreos.com_prometheuses.temp.yaml"
+    - url: "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.38/example/prometheus-operator-crd/monitoring.coreos.com_prometheusrules.yaml"
+      name: "monitoring.coreos.com_prometheusrules.temp.yaml"
+    - url: "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.38/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml"
+      name: "monitoring.coreos.com_servicemonitors.temp.yaml"
+    - url: "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.38/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml"
+      name: "monitoring.coreos.com_thanosrulers.temp.yaml"
+
+# Manually create the CRDs since the helm install fails to create them.
+- name: "Creating CRDs for prometheus-stack."
+  k8s:
+    src : "{{ prometheus_configuration_project_dir }}/crds/{{ item }}"
+    kubeconfig: "{{ prometheus_kubectl_config }}"
+    state: present
+  loop:
+    - "monitoring.coreos.com_alertmanagers.temp.yaml"
+    - "monitoring.coreos.com_podmonitors.temp.yaml"
+    - "monitoring.coreos.com_prometheuses.temp.yaml"
+    - "monitoring.coreos.com_prometheusrules.temp.yaml"
+    - "monitoring.coreos.com_servicemonitors.temp.yaml"
+    - "monitoring.coreos.com_thanosrulers.temp.yaml"
+
+# Install the helm chart.
+- name: "Installing the prometheus-stack."
+  shell: "helm install prometheus --namespace prometheus-stack --values {{ prometheus_configuration_project_dir }}/helm/values.yaml prometheus-community/kube-prometheus-stack"

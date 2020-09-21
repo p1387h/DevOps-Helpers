@@ -121,7 +121,9 @@
           labels:
             ns: kube-system
 
-  # Install istio on the cluster
+  # Install istio on the cluster.
+  # See: 
+  # https://istio.io/
   - import_tasks: ./tasks/istio_install.yaml
     vars:
       istio_kubectl_config: "{{ kubectl_config }}"
@@ -137,3 +139,11 @@
       src : "{{ prometheus_project_dir }}/container-azm-ms-agentconfig.yaml"
       kubeconfig: "{{ kubectl_config }}"
       state: present
+
+  # Install the prometheus-stack on the cluster.
+  # See:
+  # https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
+  - import_tasks: ./tasks/prometheus-stack_install.yaml
+    vars:
+      prometheus_kubectl_config: "{{ kubectl_config }}"
+      prometheus_configuration_project_dir: "{{ prometheus_project_dir }}"

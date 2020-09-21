@@ -78,6 +78,10 @@
 # Enforce mutual tls in istio.
 - name: "Enforcing mutual tls in istio."
   k8s:
-    src : "{{ istio_configuration_project_dir }}/peerauthentication_mutualtls.yaml"
-    kubeconfig: "{{ istio_kubectl_config }}"
+    src : "{{ istio_project_dir }}/peerauthentication_mutualtls.yaml"
+    kubeconfig: "{{ kubectl_config }}"
     state: present
+  register: result
+  retries: 25
+  delay: 10
+  until: result.failed == false

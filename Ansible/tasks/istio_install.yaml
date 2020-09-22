@@ -16,7 +16,7 @@
 # Restrict access to the istio-operator controller via a network policy.
 - name: "Creating the istio-operator network policy."
   k8s:
-    src : "{{ istio_configuration_project_dir }}/networkpolicy_istiooperator.yaml"
+    src : "{{ istio_configuration_project_dir }}/networkpolicy_denyall.yaml"
     kubeconfig: "{{ istio_kubectl_config }}"
     state: present
   

@@ -73,3 +73,9 @@
 # Install the helm chart.
 - name: "Installing the prometheus-stack."
   shell: "helm install prometheus --namespace prometheus-stack --values {{ prometheus_configuration_project_dir }}/helm/values.yaml prometheus-community/kube-prometheus-stack"
+  register: prometheus_helm_result
+  failed_when: "'Error: cannot re-use a name that is still in use' not in prometheus_helm_result.stderr"
+- name: "Notify about prometheus stack."
+  debug:
+    msg: "The prometheus-stack is already installed on the cluster."
+  when: "'Error: cannot re-use a name that is still in use' in prometheus_helm_result.stderr"

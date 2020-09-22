@@ -1,3 +1,13 @@
+# ----- Registry -------------------------------------------
+
+output "acr_pusher_app_id" {
+  value = module.shared.acr_pusher_app_id
+}
+
+output "acr_pusher_app_secret" {
+  value = module.shared.acr_pusher_app_secret
+}
+
 # ----- Networking -----------------------------------------
 
 output "public_ip" {

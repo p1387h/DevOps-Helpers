@@ -8,7 +8,6 @@ resource "azurerm_resource_group" "resource_group" {
 
 locals {
   combined_name = lower("${var.prefix}-${var.name}-${var.suffix}")
-  alphanumeric_combined_name = lower("${var.prefix}${var.name}${var.suffix}")
   node_resource_group_name = "${local.combined_name}-nodes"
 }
 
@@ -132,29 +131,10 @@ resource "azurerm_kubernetes_cluster" "cluster" {
 
 # ----- Registry -------------------------------------------
 
-resource "azurerm_container_registry" "acr" {
-  name                     = local.alphanumeric_combined_name
-  resource_group_name      = azurerm_resource_group.resource_group.name
-  location                 = azurerm_resource_group.resource_group.location
-  sku                      = "Basic"
-}
-
 resource "azurerm_role_assignment" "cluster_pull" {
-  scope                = azurerm_container_registry.acr.id
+  scope                = var.acr_id
   role_definition_name = "AcrPull"
   principal_id         = azurerm_kubernetes_cluster.cluster.identity[0].principal_id
-}
-
-module "sp_pusher" {
-  source = "../service_principal"
-
-  name = "${local.combined_name}-pusher"
-}
-
-resource "azurerm_role_assignment" "registry_pusher" {
-  scope                            = azurerm_container_registry.acr.id
-  role_definition_name             = "AcrPush"
-  principal_id                     = module.sp_pusher.sp_object_id
 }
 
 # ----- Monitoring -----------------------------------------

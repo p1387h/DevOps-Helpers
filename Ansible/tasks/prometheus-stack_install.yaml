@@ -15,9 +15,14 @@
 # Restrict access to the resources inside the prometheus-stack namespac via network policies.
 - name: "Creating prometheus-stack network policies."
   k8s:
-    src : "{{ prometheus_configuration_project_dir }}/networkpolicy_prometheusstack.yaml"
+    src : "{{ prometheus_configuration_project_dir }}/{{ item }}"
     kubeconfig: "{{ prometheus_kubectl_config }}"
     state: present
+  loop:
+    - "networkpolicy_denyall.yaml"
+    - "networkpolicy_alertmanager.yaml"
+    - "networkpolicy_grafana.yaml"
+    - "networkpolicy_prometheus.yaml"
 
 # Add the prometheus community repo.
 - name: "Adding the 'promethues community' repo to list of known ones."

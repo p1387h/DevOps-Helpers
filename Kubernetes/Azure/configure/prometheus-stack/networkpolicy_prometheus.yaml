@@ -1,0 +1,87 @@
+# See:
+# https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/network-policies.md
+# Allow inbound tcp dst port 9090 from any source to prometheus.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: prometheus
+  namespace: prometheus-stack
+spec:
+  ingress:
+  # - from:
+  #   # Azure Monitor.
+  #   - namespaceSelector:
+  #       matchLabels:
+  #         kube: system
+  #     podSelector:
+  #       matchLabels:
+  #         component: oms-agent
+  #     # Kiali.
+  #     - namespaceSelector:
+  #         matchLabels:
+  #           ns: kiali
+  #       podSelector:
+  #         matchLabels:
+  #           app: kiali-operator
+  #   ports:
+  #   - protocol: TCP
+  #     port: 9090
+  - ports:
+    - port: 9090
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app: prometheus
+      prometheus: k8s
+---
+# Allow inbound tcp dst port 9100 from only prometheus to node-exporter.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: node-exporter
+  namespace: prometheus-stack
+spec:
+  ingress:
+  - from:
+    - podSelector:
+        matchExpressions:
+        - key: app
+          operator: In
+          values:
+          - prometheus
+        - key: prometheus
+          operator: In
+          values:
+          - k8s
+    ports:
+    - port: 9100
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app: prometheus-node-exporter
+---
+# Allow inbound tcp dst port 8080 from only prometheus to kube-state-metrics.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kube-state-metrics
+  namespace: prometheus-stack
+spec:
+  ingress:
+  - from:
+    - podSelector:
+        matchExpressions:
+        - key: app
+          operator: In
+          values:
+          - prometheus
+        - key: prometheus
+          operator: In
+          values:
+          - k8s
+    ports:
+    - port: 8080
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: kube-state-metrics

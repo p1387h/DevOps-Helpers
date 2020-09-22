@@ -12,13 +12,6 @@
 # Install the istio-operator controller.
 - name: "Installing the istio-operator controller."
   shell: "istioctl operator init -c {{ istio_kubectl_config }}"
-
-# Restrict access to the istio-operator controller via a network policy.
-- name: "Creating the istio-operator network policy."
-  k8s:
-    src : "{{ istio_configuration_project_dir }}/networkpolicy_denyall.yaml"
-    kubeconfig: "{{ istio_kubectl_config }}"
-    state: present
   
 # Create the istio-system namespace.
 - name: "Creating the egressgateway namespace."
@@ -38,6 +31,13 @@
 - name: "Creating the egressgateway namespace."
   k8s:
     src : "{{ istio_configuration_project_dir }}/namespace_egressgateway.yaml"
+    kubeconfig: "{{ istio_kubectl_config }}"
+    state: present
+
+# Restrict access to the istio-operator controller via a network policy.
+- name: "Creating the istio-operator network policy."
+  k8s:
+    src : "{{ istio_configuration_project_dir }}/networkpolicy_denyall.yaml"
     kubeconfig: "{{ istio_kubectl_config }}"
     state: present
 

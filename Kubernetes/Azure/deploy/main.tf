@@ -2,13 +2,13 @@
 
 # Configure the Azure Provider.
 provider "azurerm" {
-  version = "~>2.25.0"
+  version = "~>2.28.0"
   features {}
 }
 
 # Configure the Microsoft Azure Active Directory Provider.
 provider "azuread" {
-  version = "~>0.11.0"
+  version = "~>1.0.0"
 }
 
 provider "random" {

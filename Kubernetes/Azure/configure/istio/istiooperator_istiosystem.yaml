@@ -12,16 +12,6 @@ spec:
         hpaSpec:
           minReplicas: 3
           maxReplicas: 10
-        # Try to place each pod on a different node. This component does not have this
-        # setting by default.
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            podAffinityTerm:
-              topologyKey: kubernetes.io/hostname
-              labelSelector:
-                matchLabels:
-                  istio: pilot
     egressGateways:
       - enabled: true
         namespace: istio-egress

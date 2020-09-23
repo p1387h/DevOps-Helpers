@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: azurefile-alertmanager
+  namespace: prometheus-stack
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: azurefile
+  selector:
+    matchLabels:
+      target: alertmanager
+  resources:
+    requests:
+      storage: 50Gi

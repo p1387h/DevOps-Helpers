@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: azurefile-prometheus
+  namespace: prometheus-stack
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: azurefile
+  selector:
+    matchLabels:
+      target: prometheus
+  resources:
+    requests:
+      storage: 50Gi

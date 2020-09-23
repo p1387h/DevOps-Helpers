@@ -1,0 +1,21 @@
+# Disable the default binding behavior and allow persistent volume claims to
+# bind to persistent volumes.
+# See:
+# https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/storage.md
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: standard
+  annotations:
+    # Disable this default storage class by setting this annotation to false.
+    storageclass.beta.kubernetes.io/is-default-class: "false"
+provisioner: kubernetes.io/azure-file
+mountOptions:
+  - dir_mode=0777
+  - file_mode=0777
+  - uid=1000
+  - gid=1000
+  - mfsymlinks
+  - nobrl
+parameters:
+  skuName: Standard_ZRS

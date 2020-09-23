@@ -1,0 +1,12 @@
+# See:
+# https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/network-policies.md
+# Deny all ingress by default.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: prometheus-stack
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress

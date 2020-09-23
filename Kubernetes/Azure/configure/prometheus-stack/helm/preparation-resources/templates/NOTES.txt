@@ -1,0 +1,1 @@
+Successfully prepared the resources needed for the prometheus-stack installation.

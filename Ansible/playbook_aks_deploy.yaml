@@ -171,3 +171,5 @@
     vars:
       prometheus_kubectl_config: "{{ kubectl_config }}"
       prometheus_configuration_project_dir: "{{ prometheus_project_dir }}"
+      prometheus_storage_account_name: "{{ terraform_output.outputs.storage_account_name.value }}"
+      prometheus_storage_account_key: "{{ terraform_output.outputs.storage_account_key.value }}"

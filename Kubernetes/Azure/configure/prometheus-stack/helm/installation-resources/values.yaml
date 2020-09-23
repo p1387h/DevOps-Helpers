@@ -3,14 +3,36 @@ prometheusOperator:
   createCustomResource: false
 alertmanager:
   alertmanagerSpec:
-    replicas: 3
+    replicas: 1
     # Try to place each pod on a different node.
     podAntiAffinity: soft
+    # Storage definition for persistent data.
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: azurefile
+          accessModes:
+            - ReadWriteOnce
+          volumeName: azurefile-alertmanager
+          resources:
+            requests:
+              storage: 50Gi
 prometheus:
   prometheusSpec:
-    replicas: 3
+    replicas: 1
     # Try to place each pod on a different node.
     podAntiAffinity: soft
+    # Storage definition for persistent data.
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: azurefile
+          accessModes:
+            - ReadWriteOnce
+          volumeName: azurefile-prometheus
+          resources:
+            requests:
+              storage: 50Gi
     # At least an istio-proxy side car is needed for acessing the application pod metrics.
     containers:
       # # Create certificates that can be used for connecting via mtls with istio envoys.

@@ -45,3 +45,13 @@ output "admin_app_id" {
 output "admin_app_secret" {
   value = module.aks.admin_app_secret
 }
+
+# ----- Storage Account ------------------------------------
+
+output "storage_account_name" {
+  value = module.aks.storage_name
+}
+
+output "storage_account_key" {
+  value = module.aks.storage_key
+}

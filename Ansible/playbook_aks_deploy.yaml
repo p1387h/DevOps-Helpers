@@ -1,5 +1,6 @@
 # Requirements for this playbook:
 # Tools:
+#   - curl
 #   - terraform
 #   - az CLI
 #   - helm
@@ -71,6 +72,29 @@
       login_azure_client_id: "{{ azure_client_id }}"
       login_azure_client_secret: "{{ azure_client_secret }}"
       login_azure_tenant_id: "{{ azure_tenant_id }}"
+
+  # Copy the file in order to replace placeholders in it.
+  - name: "Making a changeable copy of the terraform secret template."
+    copy:
+      src: "{{ aks_project_dir }}/secretstemplate.tfvars"
+      dest: "{{ aks_project_dir }}/secrets.auto.tfvars"
+
+  # Get the public ip of this computer.
+  - name: "Getting the current public ip."
+    shell: curl ifconfig.me
+    register: public_ip_result
+
+  # Display the ip for debugging purposes.
+  - name: "Displaying the current public ip."
+    debug:
+      var: public_ip_result.stdout
+
+  # Replace: $CURRENT_PUBLIC_IP with the current ip.
+  - name: "Replacing placeholder '$CURRENT_PUBLIC_IP' the current public ip."
+    replace:
+      path: "{{ aks_project_dir }}/secrets.auto.tfvars"
+      regexp: '\$CURRENT_PUBLIC_IP'
+      replace: '{{ public_ip_result.stdout }}'
 
   # Deploy the AKS.
   - name: "Deploying the AKS into the Azure cloud"

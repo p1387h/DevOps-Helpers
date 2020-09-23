@@ -27,3 +27,8 @@ variable "acr_id" {
   type        = string
   description = "The resource id of the container registry the AKS will be using."
 }
+
+variable "current_public_ip" {
+  type        = string
+  description = "The current public ip of the computer running terraform."
+}

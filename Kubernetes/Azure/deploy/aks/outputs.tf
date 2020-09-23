@@ -35,3 +35,13 @@ output "admin_app_id" {
 output "admin_app_secret" {
   value = module.sp_admin.app_password
 }
+
+# ----- Storage --------------------------------------------
+
+output "storage_name" {
+  value = module.storage.storage_account_name
+}
+
+output "storage_key" {
+  value = module.storage.storage_account_key
+}

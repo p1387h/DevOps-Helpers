@@ -8,6 +8,7 @@ resource "azurerm_resource_group" "resource_group" {
 
 locals {
   combined_name = lower("${var.prefix}-${var.name}-${var.suffix}")
+  alphanumeric_combined_name = lower("${var.prefix}${var.name}${var.suffix}")
   node_resource_group_name = "${local.combined_name}-nodes"
 }
 
@@ -25,6 +26,9 @@ resource "azurerm_subnet" "subnet" {
   resource_group_name  = azurerm_resource_group.resource_group.name
   address_prefixes     = ["10.1.0.0/16"]
   virtual_network_name = azurerm_virtual_network.vnet.name
+
+  # Make the subnet available as an endpoint for storage accounts.
+  service_endpoints    = ["Microsoft.Storage"]
 }
 
 resource "azurerm_route_table" "route_table" {
@@ -191,4 +195,17 @@ resource "azurerm_role_assignment" "cluster_contributor" {
   scope                            = azurerm_kubernetes_cluster.cluster.id
   role_definition_name             = "Contributor"
   principal_id                     = module.sp_admin.sp_object_id
+}
+
+# ----- Storage Account ------------------------------------
+
+module "storage" {
+  source = "../storage"
+
+  name                = "${local.alphanumeric_combined_name}storage"
+  resource_group_name = azurerm_resource_group.resource_group.name
+  location            = azurerm_resource_group.resource_group.location
+  subnet_ids          = [azurerm_subnet.subnet.id]
+  share_names         = ["prometheus", "alertmanager"]
+  creator_ip          = var.current_public_ip
 }

@@ -8,19 +8,3 @@ spec:
   podSelector: {}
   policyTypes:
   - Ingress
----
-# Deny all egress that is not targeting resources inside the cluster.
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: default-deny-egress
-  namespace: istio-system
-spec:
-  podSelector: {}
-  policyTypes:
-  - Egress
-  egress:
-  # Pods.
-  - to:
-    - ipBlock:
-        cidr: 10.1.0.0/16

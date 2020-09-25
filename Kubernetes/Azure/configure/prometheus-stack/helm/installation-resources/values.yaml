@@ -1,6 +1,6 @@
-prometheusOperator:
-  # Manually create the CRs beforehand.
-  createCustomResource: true
+grafana:
+  # Overwrite this value when executing helm.
+  adminPassword: null
 alertmanager:
   alertmanagerSpec:
     replicas: 1

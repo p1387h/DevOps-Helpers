@@ -23,12 +23,6 @@
     src : "{{ prometheus_configuration_project_dir }}/helm/preparation-resources/template-result.temp.yaml"
     kubeconfig: "{{ prometheus_kubectl_config }}"
     state: present
-  register: template_apply_result
-  failed_when: "'Forbidden: is immutable after creation except resources.requests for bound claims' not in template_apply_result.msg"
-- name: "Notify about persistent volume claims."
-  debug:
-    msg: "Persistent volume claims can not be changed after creation. Delete the claim and re-rerun if changes were being made."
-  when: "'Forbidden: is immutable after creation except resources.requests for bound claims' in template_apply_result.msg"
 
 # Add the prometheus community repo.
 - name: "Adding the 'promethues community' repo to list of known ones."
@@ -83,14 +77,10 @@
 
 # Install the helm chart.
 - name: "Installing the prometheus-stack."
+  environment:
+    KUBECONFIG: "{{ prometheus_kubectl_config }}"
   shell: >
     helm install prometheus 
     --namespace prometheus-stack 
     --values {{ prometheus_configuration_project_dir }}/helm/installation-resources/values.yaml 
     prometheus-community/kube-prometheus-stack
-  register: prometheus_helm_result
-  failed_when: "'Error: cannot re-use a name that is still in use' not in prometheus_helm_result.stderr"
-- name: "Notify about prometheus stack."
-  debug:
-    msg: "The prometheus-stack is already installed on the cluster."
-  when: "'Error: cannot re-use a name that is still in use' in prometheus_helm_result.stderr"

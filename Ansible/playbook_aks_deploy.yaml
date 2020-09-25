@@ -22,12 +22,8 @@
 #   azure_client_secret: XXXXX
 #   azure_subscription_id: XXXXX
 #   azure_tenant_id: XXXXX
-#   # Grafana credentials.
-#   grafana_username: XXXXX
+#   # Grafana information.
 #   grafana_password: XXXXX
-#   # Kiali credentials.
-#   kiali_username: XXXXX
-#   kiali_password: XXXXX
 
 - name: "Setting up an aks environment with istio and different testing applications"
   hosts: localhost
@@ -57,6 +53,8 @@
         - azure_client_id is defined
         - azure_client_secret is defined
         - azure_tenant_id is defined
+        # Grafana information.
+        - grafana_password is defined
         # File paths and names.
         - aks_project_dir is defined
         - kubectl_config is defined
@@ -167,9 +165,14 @@
   # Install the prometheus-stack on the cluster.
   # See:
   # https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
+  # To access the services use the following syntax:
+  # kubectl --namespace prometheus-stack port-forward svc/prometheus-grafana 8080:80
+  # kubectl --namespace prometheus-stack port-forward svc/prometheus-kube-prometheus-alertmanager 8081:9093
+  # kubectl --namespace prometheus-stack port-forward svc/prometheus-kube-prometheus-prometheus 8082:9090
   - import_tasks: ./tasks/prometheus-stack_install.yaml
     vars:
       prometheus_kubectl_config: "{{ kubectl_config }}"
       prometheus_configuration_project_dir: "{{ prometheus_project_dir }}"
       prometheus_storage_account_name: "{{ terraform_output.outputs.storage_account_name.value }}"
       prometheus_storage_account_key: "{{ terraform_output.outputs.storage_account_key.value }}"
+      prometheus_grafana_admin_password: "{{ grafana_password }}"

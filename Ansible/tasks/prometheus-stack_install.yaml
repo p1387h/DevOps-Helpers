@@ -36,45 +36,6 @@
 - name: "Updating repos."
   shell: "helm repo update"
 
-# Create CRD directory.
-- name: "Creating the CRD download directory."
-  file: 
-    state: directory
-    path: "{{ prometheus_configuration_project_dir }}/crds"
-
-# Download the CRD defintions.
-- name: "Download the CRD defintions."
-  get_url:
-    url: "{{ item.url }}"
-    dest: "{{ prometheus_configuration_project_dir }}/crds/{{ item.name }}"
-  loop:
-    - url: "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.38/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagers.yaml"
-      name: "monitoring.coreos.com_alertmanagers.temp.yaml"
-    - url: "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.38/example/prometheus-operator-crd/monitoring.coreos.com_podmonitors.yaml"
-      name: "monitoring.coreos.com_podmonitors.temp.yaml"
-    - url: "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.38/example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml"
-      name: "monitoring.coreos.com_prometheuses.temp.yaml"
-    - url: "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.38/example/prometheus-operator-crd/monitoring.coreos.com_prometheusrules.yaml"
-      name: "monitoring.coreos.com_prometheusrules.temp.yaml"
-    - url: "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.38/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml"
-      name: "monitoring.coreos.com_servicemonitors.temp.yaml"
-    - url: "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.38/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml"
-      name: "monitoring.coreos.com_thanosrulers.temp.yaml"
-
-# Manually create the CRDs since the helm install fails to create them.
-- name: "Creating CRDs for prometheus-stack."
-  k8s:
-    src : "{{ prometheus_configuration_project_dir }}/crds/{{ item }}"
-    kubeconfig: "{{ prometheus_kubectl_config }}"
-    state: present
-  loop:
-    - "monitoring.coreos.com_alertmanagers.temp.yaml"
-    - "monitoring.coreos.com_podmonitors.temp.yaml"
-    - "monitoring.coreos.com_prometheuses.temp.yaml"
-    - "monitoring.coreos.com_prometheusrules.temp.yaml"
-    - "monitoring.coreos.com_servicemonitors.temp.yaml"
-    - "monitoring.coreos.com_thanosrulers.temp.yaml"
-
 # Install the helm chart.
 - name: "Installing the prometheus-stack."
   environment:

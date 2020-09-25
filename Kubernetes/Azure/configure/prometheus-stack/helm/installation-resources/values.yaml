@@ -1,6 +1,6 @@
 prometheusOperator:
   # Manually create the CRs beforehand.
-  createCustomResource: false
+  createCustomResource: true
 alertmanager:
   alertmanagerSpec:
     replicas: 1

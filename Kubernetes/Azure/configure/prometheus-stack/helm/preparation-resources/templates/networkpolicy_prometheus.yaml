@@ -32,7 +32,7 @@ spec:
   podSelector:
     matchLabels:
       app: prometheus
-      prometheus: k8s
+      prometheus: prometheus-kube-prometheus-prometheus
 ---
 # Allow inbound tcp dst port 9100 from only prometheus to node-exporter.
 apiVersion: networking.k8s.io/v1

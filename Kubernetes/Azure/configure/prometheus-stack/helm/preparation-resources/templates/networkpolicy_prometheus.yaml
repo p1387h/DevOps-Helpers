@@ -23,6 +23,13 @@ spec:
   #       podSelector:
   #         matchLabels:
   #           app: kiali-operator
+  #     # Grafana
+  #     - namespaceSelector:
+  #         matchLabels:
+  #           ns: prometheus-stack
+  #       podSelector:
+  #         matchLabels:
+  #           app.kubernetes.io/name: grafana
   #   ports:
   #   - protocol: TCP
   #     port: 9090
@@ -70,18 +77,30 @@ spec:
   ingress:
   - from:
     - podSelector:
-        matchExpressions:
-        - key: app
-          operator: In
-          values:
-          - prometheus
-        - key: prometheus
-          operator: In
-          values:
-          - k8s
+        matchLabels:
+          app: prometheus
     ports:
     - port: 8080
       protocol: TCP
   podSelector:
     matchLabels:
       app.kubernetes.io/name: kube-state-metrics
+# ----- Custom addition -----
+# Allow inbound tcp dst port 8443 from only prometheus to prometheus-operator.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: prometheus-operator
+  namespace: prometheus-stack
+spec:
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - port: 8443
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app: kube-prometheus-stack-operator

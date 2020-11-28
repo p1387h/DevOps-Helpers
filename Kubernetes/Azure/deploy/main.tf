@@ -2,13 +2,13 @@
 
 # Configure the Azure Provider.
 provider "azurerm" {
-  version = "~>2.28.0"
+  version = "~>2.38.0"
   features {}
 }
 
 # Configure the Microsoft Azure Active Directory Provider.
 provider "azuread" {
-  version = "~>1.0.0"
+  version = "~>1.1.0"
 }
 
 provider "random" {
@@ -35,7 +35,7 @@ module "aks" {
   prefix            = "eu"
   suffix            = "01"
   location          = "West Europe"
-  aks_version       = "1.17.9"
+  aks_version       = null # Use the default one provided by Azure.
   acr_id            = module.shared.acr_id
   current_public_ip = var.current_public_ip
 }

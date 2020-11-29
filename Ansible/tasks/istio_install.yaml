@@ -85,3 +85,38 @@
   retries: 25
   delay: 10
   until: istio_mututal_tls_result.failed == false
+
+# # Disable the istio config map injection key.
+# # This is needed in order to allow injecting sidecars into single pods.
+# # See:
+# # https://github.com/istio/istio/issues/6476#issuecomment-399219937
+- name: "Copying injection config map."
+  shell: kubectl get cm istio-sidecar-injector -n istio-system -o yaml > istio-sidecar-injector.temp.yaml
+  environment:
+    KUBECONFIG: "{{ istio_kubectl_config }}"
+- name: "Replacing injection key."
+  replace:
+    path: "istio-sidecar-injector.temp.yaml"
+    before: injectedAnnotations
+    after: neverInjectSelector
+    regexp: '\[\]'
+    replace: |-
+      - matchLabels:
+          \t\t\tapp: kube-prometheus-stack-admission-create
+      \t\t\t- matchLabels:
+          \t\t\tapp: kube-prometheus-stack-admission-patch
+      \t\t\t- matchLabels:
+          \t\t\tapp.kubernetes.io/name: kube-state-metrics
+      \t\t\t- matchLabels:
+          \t\t\tapp: kube-prometheus-stack-operator
+      \t\t\t- matchLabels:
+          \t\t\tapp: prometheus-node-exporter
+      \t\t\t- matchLabels:
+          \t\t\tapp.kubernetes.io/name: grafana
+      \t\t\t- matchLabels:
+          \t\t\tapp: alertmanager
+- name: "Uploading the changed injection config map."
+  k8s:
+    src : "istio-sidecar-injector.temp.yaml"
+    kubeconfig: "{{ istio_kubectl_config }}"
+    state: present

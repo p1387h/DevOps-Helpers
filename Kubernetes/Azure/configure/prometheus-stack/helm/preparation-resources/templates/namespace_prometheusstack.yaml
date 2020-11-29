@@ -4,3 +4,4 @@ metadata:
   name: prometheus-stack
   labels:
     ns: prometheus-stack
+    istio-injection: enabled

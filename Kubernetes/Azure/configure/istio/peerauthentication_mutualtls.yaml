@@ -5,10 +5,5 @@ metadata:
   namespace: istio-system
 spec:
   mtls:
+    # Enforce mutual tls per default in all workloads.
     mode: STRICT
-    # Several ports must allow non-mtls connections since scraping the metrics via 
-    # Azure Monitor does not (currently) allow for specifying a certificate. Therefore 
-    # disabling the check is necessary for the following ports:
-    # - ingress/egress gateway: 15090
-    # - custom workloads:       15020
-    # These ports must be manually enabled in the respective namespaces via 'portLevelMtls'.

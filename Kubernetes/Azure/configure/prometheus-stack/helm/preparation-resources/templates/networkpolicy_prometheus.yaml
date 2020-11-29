@@ -85,6 +85,7 @@ spec:
   podSelector:
     matchLabels:
       app.kubernetes.io/name: kube-state-metrics
+---
 # ----- Custom addition -----
 # Allow inbound tcp dst port 8443 from only prometheus to prometheus-operator.
 apiVersion: networking.k8s.io/v1

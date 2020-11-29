@@ -33,111 +33,20 @@ prometheus:
           resources:
             requests:
               storage: 50Gi
-    # At least an istio-proxy side car is needed for acessing the application pod metrics.
-    containers:
-      # # Create certificates that can be used for connecting via mtls with istio envoys.
-      # # See:
-      # # https://github.com/istio/istio/blob/release-1.7/manifests/charts/istio-telemetry/prometheus/templates/deployment.yaml
-      - name: istio-proxy
-        # Make sure to use the correct vesion of the image and NOT "latest" 
-        # since the used volume mounts change between versions.
-        # Development image:
-        # image: "gcr.io/istio-testing/proxyv2:1.7.0"
-        image: istio/proxyv2:1.7.0
-        ports:
-          - containerPort: 15090
-            protocol: TCP
-            name: http-envoy-prom
-        args:
-          - proxy
-          - sidecar
-          - --domain
-          - $(POD_NAMESPACE).svc.cluster.local
-          - "istio-proxy-prometheus"
-          - --proxyLogLevel=warning
-          - --proxyComponentLogLevel=misc:error
-          - --controlPlaneAuthPolicy
-          - NONE
-          - --trust-domain=cluster.local
-        env:
-          - name: OUTPUT_CERTS
-            value: "/etc/istio-certs"
-          - name: JWT_POLICY
-            value: third-party-jwt
-          - name: PILOT_CERT_PROVIDER
-            value: istiod
-          # Temp, pending PR to make it default or based on the istiodAddr env
-          - name: CA_ADDR
-            value: istiod.istio-system.svc:15012
-          - name: POD_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.name
-          - name: POD_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
-          - name: INSTANCE_IP
-            valueFrom:
-              fieldRef:
-                fieldPath: status.podIP
-          - name: SERVICE_ACCOUNT
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.serviceAccountName
-          - name: HOST_IP
-            valueFrom:
-              fieldRef:
-                fieldPath: status.hostIP
-          - name: ISTIO_META_MESH_ID
-            value: "cluster.local"
-          - name: ISTIO_META_CLUSTER_ID
-            value: "Kubernetes"
-        imagePullPolicy: Always
-        readinessProbe:
-          failureThreshold: 30
-          httpGet:
-            path: /healthz/ready
-            port: 15020
-            scheme: HTTP
-          initialDelaySeconds: 1
-          periodSeconds: 2
-          successThreshold: 1
-          timeoutSeconds: 1
-        volumeMounts:
-          - mountPath: /var/run/secrets/istio
-            name: istiod-ca-cert
-          - mountPath: /etc/istio/proxy
-            name: istio-envoy
-          - mountPath: /var/run/secrets/tokens
-            name: istio-token
-          - mountPath: /etc/istio-certs/
-            name: istio-certs
-          - name: istio-config-volume
-            mountPath: /etc/istio/config
+    podMetadata:
+      annotations:
+        sidecar.istio.io/inject: "true" # Make istio inject a sidecar into prometheus pods.
+        traffic.sidecar.istio.io/includeInboundPorts: ""   # Do not intercept any inbound ports.
+        traffic.sidecar.istio.io/includeOutboundIPRanges: ""  # Do not intercept any outbound traffic.
+        proxy.istio.io/config: |  # Configure an env variable `OUTPUT_CERTS` to write certificates to the given folder.
+          proxyMetadata:
+            OUTPUT_CERTS: /etc/istio-output-certs
+        sidecar.istio.io/userVolume: '[{"name": "istio-certs", "emptyDir": {"medium":"Memory"}}]'  # Mount the shared volume.
+        sidecar.istio.io/userVolumeMount: '[{"name": "istio-certs", "mountPath": "/etc/istio-output-certs"}]'
     volumes:
-      - name: istio-config-volume
-        configMap:
-          name: istio
-          optional: true
       - name: istio-certs
         emptyDir:
           medium: Memory
-      - emptyDir:
-          medium: Memory
-        name: istio-envoy
-      - name: istio-token
-        projected:
-          defaultMode: 420
-          sources:
-            - serviceAccountToken:
-                path: istio-token
-                expirationSeconds: 43200
-                audience: istio-ca
-      - name: istiod-ca-cert
-        configMap:
-          defaultMode: 420
-          name: istio-ca-root-cert
     volumeMounts:
       # Mount the sidecar volume into prometheus to access the certificates.
       - mountPath: /etc/istio-certs

@@ -1,0 +1,14 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: prometheus-stack
+  namespace: prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: prometheus
+  mtls:
+    # Include the resources in the mesh in order to allow them to access the 
+    # services. "PERMISSIVE" is needed since any outside tools that depend 
+    # on prometheus must be able to access it as well.
+    mode: PERMISSIVE

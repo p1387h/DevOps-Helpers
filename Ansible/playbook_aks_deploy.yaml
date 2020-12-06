@@ -167,9 +167,9 @@
   # See:
   # https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
   # To access the services use the following syntax:
-  # kubectl --namespace prometheus-stack port-forward svc/prometheus-grafana 8080:80
-  # kubectl --namespace prometheus-stack port-forward svc/prometheus-kube-prometheus-alertmanager 8081:9093
-  # kubectl --namespace prometheus-stack port-forward svc/prometheus-kube-prometheus-prometheus 8082:9090
+  # kubectl --namespace prometheus-stack port-forward svc/prometheus-stack-grafana 8080:80
+  # kubectl --namespace prometheus-stack port-forward svc/prometheus-stack-kube-prom-alertmanager 8081:9093
+  # kubectl --namespace prometheus-stack port-forward svc/prometheus-stack-kube-prom-prometheus 8082:9090
   - import_tasks: ./tasks/prometheus-stack_install.yaml
     vars:
       prometheus_kubectl_config: "{{ kubectl_config }}"

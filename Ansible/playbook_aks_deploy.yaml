@@ -180,6 +180,8 @@
       prometheus_version: "12.4.0"
   
   # Install the kiali-operator on the cluster.
+  # See:
+  # https://github.com/kiali/helm-charts
   # To access the service use the following syntax:
   # istioctl dashboard kiali --namespace kiali
   - import_tasks: ./tasks/kiali_install.yaml

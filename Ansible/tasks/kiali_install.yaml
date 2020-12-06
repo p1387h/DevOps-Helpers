@@ -28,4 +28,5 @@
     --namespace kiali-operator 
     --values {{ kiali_configuration_project_dir }}/helm/values.yaml 
     --repo https://kiali.org/helm-charts 
+    --version v1.27.0
     kiali-operator

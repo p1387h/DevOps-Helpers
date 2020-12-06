@@ -46,4 +46,5 @@
     --namespace prometheus-stack 
     --values {{ prometheus_configuration_project_dir }}/helm/installation-resources/values.yaml 
     --set grafana.adminPassword={{ prometheus_grafana_admin_password }}
+    --version 0.44.0
     prometheus-community/kube-prometheus-stack

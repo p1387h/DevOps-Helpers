@@ -19,7 +19,7 @@ cr:
       istio-egressgateway: istio-egress
     external_services:
       prometheus:
-        url: "http://prometheus-kube-prometheus-prometheus.prometheus-stack:9090"
+        url: "http://prometheus-stack-kube-prom-prometheus.prometheus-stack:9090"
     istio:
       component_status:
         components:

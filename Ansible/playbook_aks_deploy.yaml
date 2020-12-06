@@ -37,6 +37,7 @@
     kubectl_config: "./kube.config"
     istio_project_dir: "../Kubernetes/Azure/configure/istio"
     prometheus_project_dir: "../Kubernetes/Azure/configure/prometheus-stack"
+    kiali_project_dir: "../Kubernetes/Azure/configure/kiali"
   vars_files:
       - ./configuration.secret.yaml
   tasks:
@@ -176,3 +177,11 @@
       prometheus_storage_account_name: "{{ terraform_output.outputs.storage_account_name.value }}"
       prometheus_storage_account_key: "{{ terraform_output.outputs.storage_account_key.value }}"
       prometheus_grafana_admin_password: "{{ grafana_password }}"
+  
+  # Install the kiali-operator on the cluster.
+  # To access the service use the following syntax:
+  # istioctl dashboard kiali --namespace kiali
+  - import_tasks: ./tasks/kiali_install.yaml
+    vars:
+      kiali_kubectl_config: "{{ kubectl_config }}"
+      kiali_configuration_project_dir: "{{ kiali_project_dir }}"

@@ -1,0 +1,31 @@
+# Verify that all needed variables are set.
+- name: "Verifying the existence of all needed variables."
+  assert:
+    that:
+      - kiali_kubectl_config is defined
+      - kiali_configuration_project_dir is defined
+
+# Create the kiali namespace.
+- name: "Creating the kiali namespace."
+  k8s:
+    src : "{{ kiali_configuration_project_dir }}/namespace_kiali.yaml"
+    kubeconfig: "{{ kiali_kubectl_config }}"
+    state: present
+
+# Create the kiali-operator namespace.
+- name: "Creating the kiali-operator namespace."
+  k8s:
+    src : "{{ kiali_configuration_project_dir }}/namespace_kialioperator.yaml"
+    kubeconfig: "{{ kiali_kubectl_config }}"
+    state: present
+
+# Install the helm chart.
+- name: "Installing the kiali-operator."
+  environment:
+    KUBECONFIG: "{{ kiali_kubectl_config }}"
+  shell: >
+    helm install kiali-operator 
+    --namespace kiali-operator 
+    --values {{ kiali_configuration_project_dir }}/helm/values.yaml 
+    --repo https://kiali.org/helm-charts 
+    kiali-operator

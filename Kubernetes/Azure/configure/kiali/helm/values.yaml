@@ -1,0 +1,33 @@
+watchNamespace: kiali
+cr:
+  create: true
+  # Create the custom resource in the same namespace as the operator by defautlt.
+  # This can be changed to any other namespace i.e. prometheus.
+  # NOTE:
+  # Read the helm status for the kiali-operator for further information before
+  # uninstalling the operator.
+  namespace: kiali
+  spec:
+    auth:
+      strategy: token
+    deployment:
+      ingress_enabled: false
+    istio_namespace: istio-system
+    istio_component_namespaces:
+      prometheus: prometheus-stack
+      istio-ingressgateway: istio-ingress
+      istio-egressgateway: istio-egress
+    external_services:
+      prometheus:
+        url: "http://prometheus-kube-prometheus-prometheus.prometheus-stack:9090"
+    istio:
+      component_status:
+        components:
+        - app_label: istiod
+          is_core: true
+        - app_label: istio-ingressgateway
+          namespace: istio-ingress
+          is_core: true
+        - app_label: istio-egressgateway
+          namespace: istio-egress
+          is_core: true

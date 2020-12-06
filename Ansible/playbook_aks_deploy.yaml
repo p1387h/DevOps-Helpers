@@ -177,6 +177,7 @@
       prometheus_storage_account_name: "{{ terraform_output.outputs.storage_account_name.value }}"
       prometheus_storage_account_key: "{{ terraform_output.outputs.storage_account_key.value }}"
       prometheus_grafana_admin_password: "{{ grafana_password }}"
+      prometheus_version: "12.4.0"
   
   # Install the kiali-operator on the cluster.
   # To access the service use the following syntax:
@@ -185,3 +186,4 @@
     vars:
       kiali_kubectl_config: "{{ kubectl_config }}"
       kiali_configuration_project_dir: "{{ kiali_project_dir }}"
+      kiali_version: "1.27.0"

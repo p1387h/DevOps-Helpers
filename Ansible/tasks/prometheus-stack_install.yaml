@@ -7,6 +7,7 @@
       - prometheus_storage_account_name is defined
       - prometheus_storage_account_key is defined
       - prometheus_grafana_admin_password is defined
+      - prometheus_version is defined
 
 # Use helm to template the configuration.
 - name: "Templating the configuration files."
@@ -42,9 +43,9 @@
   environment:
     KUBECONFIG: "{{ prometheus_kubectl_config }}"
   shell: >
-    helm install prometheus 
+    helm install prometheus-stack 
     --namespace prometheus-stack 
     --values {{ prometheus_configuration_project_dir }}/helm/installation-resources/values.yaml 
     --set grafana.adminPassword={{ prometheus_grafana_admin_password }}
-    --version 0.44.0
-    prometheus-community/kube-prometheus-stack
+    prometheus-community/kube-prometheus-stack 
+    --version="{{ prometheus_version }}"

@@ -4,6 +4,7 @@
     that:
       - kiali_kubectl_config is defined
       - kiali_configuration_project_dir is defined
+      - kiali_version is defined
 
 # Create the kiali namespace.
 - name: "Creating the kiali namespace."
@@ -19,6 +20,14 @@
     kubeconfig: "{{ kiali_kubectl_config }}"
     state: present
 
+# Add the prometheus community repo.
+- name: "Adding the 'kiali' repo to list of known ones."
+  shell: "helm repo add kiali https://kiali.org/helm-charts"
+
+# Update the repos.
+- name: "Updating repos."
+  shell: "helm repo update"
+
 # Install the helm chart.
 - name: "Installing the kiali-operator."
   environment:
@@ -27,6 +36,5 @@
     helm install kiali-operator 
     --namespace kiali-operator 
     --values {{ kiali_configuration_project_dir }}/helm/values.yaml 
-    --repo https://kiali.org/helm-charts 
-    --version v1.27.0
-    kiali-operator
+    kiali/kiali-operator 
+    --version="{{ kiali_version }}"

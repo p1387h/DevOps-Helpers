@@ -57,6 +57,21 @@ spec:
         matchLabels:
           istio: egressgateway
 ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-example-v2-to-example-v1
+  namespace: example-v2
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          ns: example-v1
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -112,14 +127,35 @@ metadata:
 spec:
   ports:
   - name: http
-    port: 8000
+    port: 80
+    targetPort: 8000
   selector:
     app: helloworld-v2
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: helloworld-v2
+  name: helloworld-v2-internal
+  namespace: example-v2
+spec:
+  # By default all virtual services, service entries and destination 
+  # rules are globally visible.
+  hosts:
+  - helloworld-v2.example-v2.svc.cluster.local
+  gateways:
+  - mesh
+  http:
+  - name: "v2-endpoint-internal"
+    route:
+    - destination:
+        port:
+          number: 80
+        host: helloworld-v2.example-v2.svc.cluster.local
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: helloworld-v2-ingress
   namespace: example-v2
 spec:
   # Do NOT set the "exportTo" key here since the Gateway resource
@@ -127,12 +163,10 @@ spec:
   # service entries and destination rules are globally visible.
   hosts:
   - eu-example-01.westeurope.cloudapp.azure.com
-  - helloworld-v2.example-v2.svc.cluster.local
   gateways:
   - istio-ingress/default-gateway
-  - mesh
   http:
-  - name: "v2-endpoint"
+  - name: "v2-endpoint-ingress"
     match:
     - uri:
         prefix: "/v2"
@@ -143,7 +177,7 @@ spec:
     route:
     - destination:
         port:
-          number: 8000
+          number: 80
         host: helloworld-v2.example-v2.svc.cluster.local
 ---
 apiVersion: security.istio.io/v1beta1
@@ -172,6 +206,13 @@ spec:
   - from:
     - source:
         namespaces: ["istio-ingress"]
+    to:
+    - operation:
+        methods: ["GET", "POST", "PUT", "DELETE"]
+  # Example-v1.
+  - from:
+    - source:
+        namespaces: ["example-v1"]
     to:
     - operation:
         methods: ["GET", "POST", "PUT", "DELETE"]

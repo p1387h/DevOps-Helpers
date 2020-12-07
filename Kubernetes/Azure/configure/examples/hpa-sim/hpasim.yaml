@@ -85,7 +85,7 @@ spec:
       annotations:
         prometheus.io/scrape: "true"   # Determines if a pod should be scraped. Set to true to enable scraping.
         prometheus.io/path: "/metrics" # Determines the path to scrape metrics at. Defaults to /metrics.
-        prometheus.io/port: "8080"     # Determines the port to scrape metrics at. Defaults to 80.
+        prometheus.io/port: "80"     # Determines the port to scrape metrics at. Defaults to 80.
         sidecar.istio.io/rewriteAppHTTPProbers: "false" # Determines if the kubernetes http probes should be rewritten or not.
     spec:
       serviceAccountName: hpa-sim
@@ -109,27 +109,46 @@ metadata:
 spec:
   ports:
   - name: http
-    port: 8080
+    port: 80
+    targetPort: 8080
   selector:
     app: hpa-sim
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: hpa-sim
+  name: hpa-sim-internal
   namespace: hpa-sim
+spec:
+  # By default all virtual services, service entries and destination 
+  # rules are globally visible.
+  hosts:
+  - hpa-sim.hpa-sim.svc.cluster.local
+  gateways:
+  - mesh
+  http:
+  - name: "hpa-sim-endpoint-internal"
+    route:
+    - destination:
+        port:
+          number: 80
+        host: hpa-sim.hpa-sim.svc.cluster.local
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: hpa-sim-ingress
+  namespace: example-v1
 spec:
   # Do NOT set the "exportTo" key here since the Gateway resource
   # must be able to see the service. By default all virtual services,
   # service entries and destination rules are globally visible.
   hosts:
   - eu-example-01.westeurope.cloudapp.azure.com
-  - hpa-sim.hpa-sim.svc.cluster.local
   gateways:
   - istio-ingress/default-gateway
-  - mesh
   http:
-  - name: "hpa-sim-endpoint"
+  - name: "hpa-sim-endpoint-ingress"
     match:
     - uri:
         prefix: "/hpa-sim"
@@ -140,7 +159,7 @@ spec:
     route:
     - destination:
         port:
-          number: 8080
+          number: 80
         host: hpa-sim.hpa-sim.svc.cluster.local
 ---
 apiVersion: security.istio.io/v1beta1
@@ -164,7 +183,7 @@ spec:
     - operation:
         methods: ["GET"]
         paths: ["/metrics"]
-        ports: ["8080"]
+        ports: ["80"]
   # Default ingress.
   - from:
     - source:

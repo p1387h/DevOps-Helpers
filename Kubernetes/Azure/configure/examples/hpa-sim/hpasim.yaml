@@ -126,7 +126,7 @@ spec:
   - eu-example-01.westeurope.cloudapp.azure.com
   - hpa-sim.hpa-sim.svc.cluster.local
   gateways:
-  - istio-ingress/hpa-sim-gateway
+  - istio-ingress/default-gateway
   - mesh
   http:
   - name: "hpa-sim-endpoint"
@@ -142,23 +142,6 @@ spec:
         port:
           number: 8080
         host: hpa-sim.hpa-sim.svc.cluster.local
----
-apiVersion: networking.istio.io/v1beta1
-kind: Gateway
-metadata:
-  name: hpa-sim-gateway
-  namespace: istio-ingress
-spec:
-  selector:
-    istio: ingressgateway # Use Istio default gateway implementation.
-  servers:
-  - port:
-      number: 80
-      name: http2
-      protocol: HTTP2
-    hosts:
-    # Namespace/VirtualServiceHost
-    - "hpa-sim/eu-example-01.westeurope.cloudapp.azure.com"
 ---
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy

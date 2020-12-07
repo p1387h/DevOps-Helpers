@@ -125,3 +125,10 @@
     src : "istio-sidecar-injector.temp.yaml"
     kubeconfig: "{{ istio_kubectl_config }}"
     state: present
+
+# Add a default http gateway.
+- name: "Adding a default http gateway."
+  k8s:
+    src : "{{ istio_project_dir }}/gateway_httpdefault.yaml"
+    kubeconfig: "{{ istio_kubectl_config }}"
+    state: present

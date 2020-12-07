@@ -129,7 +129,7 @@ spec:
   - eu-example-01.westeurope.cloudapp.azure.com
   - helloworld-v1.example-v1.svc.cluster.local
   gateways:
-  - istio-ingress/helloworld-v1-gateway
+  - istio-ingress/default-gateway
   - mesh
   http:
   - name: "v1-endpoint"
@@ -145,23 +145,6 @@ spec:
         port:
           number: 8000
         host: helloworld-v1.example-v1.svc.cluster.local
----
-apiVersion: networking.istio.io/v1beta1
-kind: Gateway
-metadata:
-  name: helloworld-v1-gateway
-  namespace: istio-ingress
-spec:
-  selector:
-    istio: ingressgateway # Use Istio default gateway implementation.
-  servers:
-  - port:
-      number: 80
-      name: http2
-      protocol: HTTP2
-    hosts:
-    # Namespace/VirtualServiceHost
-    - "example-v1/eu-example-01.westeurope.cloudapp.azure.com"
 ---
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy

@@ -2,17 +2,14 @@
 
 # Configure the Azure Provider.
 provider "azurerm" {
-  version = "~>2.38.0"
   features {}
 }
 
 # Configure the Microsoft Azure Active Directory Provider.
 provider "azuread" {
-  version = "~>1.1.0"
 }
 
 provider "random" {
-  version = ">=2.3.0"
 }
 
 # ----- Module: Shared resources ---------------------------

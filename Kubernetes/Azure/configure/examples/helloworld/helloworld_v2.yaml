@@ -6,14 +6,19 @@ metadata:
     istio-injection: enabled
     ns: example-v2
 ---
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
+kind: Sidecar
 metadata:
-  name: default-deny-egress
+  name: default
+  namespace: example-v2
 spec:
-  podSelector: {}
-  policyTypes:
-  - Egress
+  egress:
+  # Limit the possible egress targets to this collection. Only these are exported 
+  # to the sidecar. It is advised to limit the hosts in large clusters to improve 
+  # the performance since not all hosts are relevant for this workload.
+  - hosts:
+    - "./*"
+    - "istio-system/*"
+    - "example-v1/*"
 ---
 # Do NOT allow any outgoing connections by default that are not the following target:
 # - istio-system for lookups (certs, etc.)
@@ -51,6 +56,14 @@ spec:
         matchLabels:
           istio: egressgateway
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: helloworld-v2
+  namespace: example-v2
+  labels:
+    account: helloworld-v2
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -70,14 +83,21 @@ spec:
       labels:
         app: helloworld-v2
         version: v1
+      annotations:
+        # Scraping will fail since the helloworld pod does not expose metrics.
+        prometheus.io/scrape: "true"   # Determines if a pod should be scraped. Set to true to enable scraping.
+        prometheus.io/path: "/metrics" # Determines the path to scrape metrics at. Defaults to /metrics.
+        prometheus.io/port: "8000"     # Determines the port to scrape metrics at. Defaults to 80.
+        sidecar.istio.io/rewriteAppHTTPProbers: "false" # Determines if the kubernetes http probes should be rewritten or not.
     spec:
+      serviceAccountName: helloworld-v2
       containers:
       - name: helloworld
         image: crccheck/hello-world
         resources:
           requests:
             cpu: "100m"
-        imagePullPolicy: IfNotPresent #Always
+        imagePullPolicy: IfNotPresent # Always
         ports:
         - containerPort: 8000
 ---
@@ -112,9 +132,10 @@ spec:
   - mesh
   http:
   - match:
-    - port: 80
-      uri:
+    - uri:
         prefix: "/v2"
+    - uri:
+        prefix: "/v2/"
     rewrite:
       uri: "/"
     route:
@@ -130,7 +151,7 @@ metadata:
   namespace: istio-ingress
 spec:
   selector:
-    istio: ingressgateway # use Istio default gateway implementation
+    istio: ingressgateway # Use Istio default gateway implementation.
   servers:
   - port:
       number: 80
@@ -139,3 +160,33 @@ spec:
     hosts:
     # Namespace/VirtualServiceHost
     - "example-v2/eu-example-01.westeurope.cloudapp.azure.com"
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: helloworld-v2
+  namespace: example-v2
+spec:
+  selector:
+    matchLabels:
+      app: helloworld-v2
+      version: v1
+  action: ALLOW
+  rules:
+  # Prometheus scraping.
+  - from:
+    - source:
+        principals: ["cluster.local/ns/prometheus-stack/sa/prometheus-stack-kube-prom-prometheus"]
+        namespaces: ["prometheus-stack"]
+    to:
+    - operation:
+        methods: ["GET"]
+        paths: ["/metrics"]
+        ports: ["8000"]
+  # Default ingress.
+  - from:
+    - source:
+        namespaces: ["istio-ingress"]
+    to:
+    - operation:
+        methods: ["GET", "POST", "PUT", "DELETE"]

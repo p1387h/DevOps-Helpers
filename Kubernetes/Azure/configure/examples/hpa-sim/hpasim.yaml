@@ -1,16 +1,16 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: example-v1
+  name: hpa-sim
   labels:
     istio-injection: enabled
-    ns: example-v1
+    ns: hpa-sim
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: Sidecar
 metadata:
   name: default
-  namespace: example-v1
+  namespace: hpa-sim
 spec:
   egress:
   # Limit the possible egress targets to this collection. Only these are exported 
@@ -19,7 +19,6 @@ spec:
   - hosts:
     - "./*"
     - "istio-system/*"
-    - "example-v2/*"
 ---
 # Do NOT allow any outgoing connections by default that are not the following target:
 # - istio-system for lookups (certs, etc.)
@@ -29,7 +28,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-egress-to-istio-and-kube-dns
-  namespace: example-v1
+  namespace: hpa-sim
 spec:
   podSelector: {}
   policyTypes:
@@ -60,96 +59,94 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: helloworld-v1
-  namespace: example-v1
+  name: hpa-sim
+  namespace: hpa-sim
   labels:
-    account: helloworld-v1
+    account: hpa-sim
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: helloworld-v1
-  namespace: example-v1
+  name: hpa-sim
+  namespace: hpa-sim
   labels:
-    app: helloworld-v1
-    version: v1
+    app: hpa-sim
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: helloworld-v1
+      app: hpa-sim
       version: v1
   template:
     metadata:
       labels:
-        app: helloworld-v1
+        app: hpa-sim
         version: v1
       annotations:
-        # Scraping will fail since the helloworld pod does not expose metrics.
         prometheus.io/scrape: "true"   # Determines if a pod should be scraped. Set to true to enable scraping.
         prometheus.io/path: "/metrics" # Determines the path to scrape metrics at. Defaults to /metrics.
-        prometheus.io/port: "8000"     # Determines the port to scrape metrics at. Defaults to 80.
+        prometheus.io/port: "8080"     # Determines the port to scrape metrics at. Defaults to 80.
         sidecar.istio.io/rewriteAppHTTPProbers: "false" # Determines if the kubernetes http probes should be rewritten or not.
     spec:
-      serviceAccountName: helloworld-v1
+      serviceAccountName: hpa-sim
       containers:
-      - name: helloworld
-        image: crccheck/hello-world
-        resources:
-          requests:
-            cpu: "100m"
-        imagePullPolicy: IfNotPresent # Always
+      - name: hpa-sim
+        image: euexample00.azurecr.io/hpa-sim
+        imagePullPolicy: Always # IfNotPresent
+        env:
+          - name: LISTENING_PORT
+            value: "8080"
         ports:
-        - containerPort: 8000
+          - containerPort: 8080
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: helloworld-v1
-  namespace: example-v1
+  name: hpa-sim
+  namespace: hpa-sim
   labels:
-    app: helloworld-v1
+    app: hpa-sim
 spec:
   ports:
   - name: http
-    port: 8000
+    port: 8080
   selector:
-    app: helloworld-v1
+    app: hpa-sim
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: helloworld-v1
-  namespace: example-v1
+  name: hpa-sim
+  namespace: hpa-sim
 spec:
   # Do NOT set the "exportTo" key here since the Gateway resource
   # must be able to see the service. By default all virtual services,
   # service entries and destination rules are globally visible.
   hosts:
   - eu-example-01.westeurope.cloudapp.azure.com
-  - helloworld-v1.example-v1.svc.cluster.local
+  - hpa-sim.hpa-sim.svc.cluster.local
   gateways:
-  - istio-ingress/helloworld-v1-gateway
+  - istio-ingress/hpa-sim-gateway
   - mesh
   http:
-  - name: "v1-endpoint"
+  - name: "hpa-sim-endpoint"
     match:
     - uri:
-        prefix: "/v1"
+        prefix: "/hpa-sim"
     - uri:
-        prefix: "/v1/"
+        prefix: "/hpa-sim/"
     rewrite:
       uri: "/"
     route:
     - destination:
         port:
-          number: 8000
-        host: helloworld-v1.example-v1.svc.cluster.local
+          number: 8080
+        host: hpa-sim.hpa-sim.svc.cluster.local
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
-  name: helloworld-v1-gateway
+  name: hpa-sim-gateway
   namespace: istio-ingress
 spec:
   selector:
@@ -161,17 +158,17 @@ spec:
       protocol: HTTP2
     hosts:
     # Namespace/VirtualServiceHost
-    - "example-v1/eu-example-01.westeurope.cloudapp.azure.com"
+    - "hpa-sim/eu-example-01.westeurope.cloudapp.azure.com"
 ---
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
-  name: helloworld-v1
-  namespace: example-v1
+  name: hpa-sim
+  namespace: hpa-sim
 spec:
   selector:
     matchLabels:
-      app: helloworld-v1
+      app: hpa-sim
       version: v1
   action: ALLOW
   rules:
@@ -184,8 +181,8 @@ spec:
     - operation:
         methods: ["GET"]
         paths: ["/metrics"]
-        ports: ["8000"]
-  # Ingress.
+        ports: ["8080"]
+  # Default ingress.
   - from:
     - source:
         namespaces: ["istio-ingress"]

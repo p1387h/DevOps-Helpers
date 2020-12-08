@@ -1,16 +1,16 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: hpa-sim
+  name: hpa-sim-ns
   labels:
     istio-injection: enabled
-    ns: hpa-sim
+    ns: hpa-sim-ns
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: Sidecar
 metadata:
   name: default
-  namespace: hpa-sim
+  namespace: hpa-sim-ns
 spec:
   egress:
   # Limit the possible egress targets to this collection. Only these are exported 
@@ -28,7 +28,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-egress-to-istio-and-kube-dns
-  namespace: hpa-sim
+  namespace: hpa-sim-ns
 spec:
   podSelector: {}
   policyTypes:
@@ -60,7 +60,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: hpa-sim
-  namespace: hpa-sim
+  namespace: hpa-sim-ns
   labels:
     account: hpa-sim
 ---
@@ -68,7 +68,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hpa-sim
-  namespace: hpa-sim
+  namespace: hpa-sim-ns
   labels:
     app: hpa-sim
 spec:
@@ -85,7 +85,7 @@ spec:
       annotations:
         prometheus.io/scrape: "true"   # Determines if a pod should be scraped. Set to true to enable scraping.
         prometheus.io/path: "/metrics" # Determines the path to scrape metrics at. Defaults to /metrics.
-        prometheus.io/port: "80"     # Determines the port to scrape metrics at. Defaults to 80.
+        prometheus.io/port: "8080"     # Determines the port to scrape metrics at. Defaults to 80.
         sidecar.istio.io/rewriteAppHTTPProbers: "false" # Determines if the kubernetes http probes should be rewritten or not.
     spec:
       serviceAccountName: hpa-sim
@@ -103,7 +103,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: hpa-sim
-  namespace: hpa-sim
+  namespace: hpa-sim-ns
   labels:
     app: hpa-sim
 spec:
@@ -118,12 +118,12 @@ apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: hpa-sim-internal
-  namespace: hpa-sim
+  namespace: hpa-sim-ns
 spec:
   # By default all virtual services, service entries and destination 
   # rules are globally visible.
   hosts:
-  - hpa-sim.hpa-sim.svc.cluster.local
+  - hpa-sim.hpa-sim-ns.svc.cluster.local
   gateways:
   - mesh
   http:
@@ -132,13 +132,13 @@ spec:
     - destination:
         port:
           number: 80
-        host: hpa-sim.hpa-sim.svc.cluster.local
+        host: hpa-sim.hpa-sim-ns.svc.cluster.local
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: hpa-sim-ingress
-  namespace: example-v1
+  namespace: hpa-sim-ns
 spec:
   # Do NOT set the "exportTo" key here since the Gateway resource
   # must be able to see the service. By default all virtual services,
@@ -160,13 +160,13 @@ spec:
     - destination:
         port:
           number: 80
-        host: hpa-sim.hpa-sim.svc.cluster.local
+        host: hpa-sim.hpa-sim-ns.svc.cluster.local
 ---
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: hpa-sim
-  namespace: hpa-sim
+  namespace: hpa-sim-ns
 spec:
   selector:
     matchLabels:
@@ -183,7 +183,7 @@ spec:
     - operation:
         methods: ["GET"]
         paths: ["/metrics"]
-        ports: ["80"]
+        ports: ["8080"]
   # Default ingress.
   - from:
     - source:

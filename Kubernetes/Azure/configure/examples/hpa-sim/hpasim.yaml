@@ -117,26 +117,6 @@ spec:
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: hpa-sim-internal
-  namespace: hpa-sim-ns
-spec:
-  # By default all virtual services, service entries and destination 
-  # rules are globally visible.
-  hosts:
-  - hpa-sim.hpa-sim-ns.svc.cluster.local
-  gateways:
-  - mesh
-  http:
-  - name: "hpa-sim-endpoint-internal"
-    route:
-    - destination:
-        port:
-          number: 80
-        host: hpa-sim.hpa-sim-ns.svc.cluster.local
----
-apiVersion: networking.istio.io/v1beta1
-kind: VirtualService
-metadata:
   name: hpa-sim-ingress
   namespace: hpa-sim-ns
 spec:
@@ -145,8 +125,10 @@ spec:
   # service entries and destination rules are globally visible.
   hosts:
   - eu-example-01.westeurope.cloudapp.azure.com
+  - hpa-sim.hpa-sim-ns.svc.cluster.local
   gateways:
   - istio-ingress/default-gateway
+  - mesh
   http:
   - name: "hpa-sim-endpoint-ingress"
     match:
@@ -155,7 +137,13 @@ spec:
     - uri:
         prefix: "/hpa-sim/"
     rewrite:
-      uri: "/"
+      uri: " " # "/" is also a possibility, but in this case this results in a 301 response.
+    route:
+    - destination:
+        port:
+          number: 80
+        host: hpa-sim.hpa-sim-ns.svc.cluster.local
+  - name: "hpa-sim-endpoint-internal"
     route:
     - destination:
         port:

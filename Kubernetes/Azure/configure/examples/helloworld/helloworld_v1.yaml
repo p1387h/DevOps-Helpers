@@ -135,26 +135,6 @@ spec:
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: helloworld-v1-internal
-  namespace: example-v1
-spec:
-  # By default all virtual services, service entries and destination 
-  # rules are globally visible.
-  hosts:
-  - helloworld-v1.example-v1.svc.cluster.local
-  gateways:
-  - mesh
-  http:
-  - name: "v1-endpoint-internal"
-    route:
-    - destination:
-        port:
-          number: 80
-        host: helloworld-v1.example-v1.svc.cluster.local
----
-apiVersion: networking.istio.io/v1beta1
-kind: VirtualService
-metadata:
   name: helloworld-v1-ingress
   namespace: example-v1
 spec:
@@ -163,8 +143,10 @@ spec:
   # service entries and destination rules are globally visible.
   hosts:
   - eu-example-01.westeurope.cloudapp.azure.com
+  - helloworld-v1.example-v1.svc.cluster.local
   gateways:
   - istio-ingress/default-gateway
+  - mesh
   http:
   - name: "v1-endpoint-ingress"
     match:
@@ -173,7 +155,13 @@ spec:
     - uri:
         prefix: "/v1/"
     rewrite:
-      uri: "/"
+      uri: "/" # " "
+    route:
+    - destination:
+        port:
+          number: 80
+        host: helloworld-v1.example-v1.svc.cluster.local
+  - name: "v1-endpoint-internal"
     route:
     - destination:
         port:

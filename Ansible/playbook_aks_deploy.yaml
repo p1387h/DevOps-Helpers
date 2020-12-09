@@ -38,6 +38,7 @@
     istio_project_dir: "../Kubernetes/Azure/configure/istio"
     prometheus_project_dir: "../Kubernetes/Azure/configure/prometheus-stack"
     kiali_project_dir: "../Kubernetes/Azure/configure/kiali"
+    certmanager_project_dir: "../Kubernetes/Azure/configure/cert-manager"
   vars_files:
       - ./configuration.secret.yaml
   tasks:
@@ -189,3 +190,13 @@
       kiali_kubectl_config: "{{ kubectl_config }}"
       kiali_configuration_project_dir: "{{ kiali_project_dir }}"
       kiali_version: "1.27.0"
+  
+  # Install certmanager on the cluster.
+  # See:
+  # https://github.com/jetstack/cert-manager
+  - import_tasks: ./tasks/cert-manager_install.yaml
+    vars:
+      certmanager_kubectl_config: "{{ kubectl_config }}"
+      certmanager_configuration_project_dir: "{{ certmanager_project_dir }}"
+      istio_configuration_project_dir: "{{ istio_project_dir }}"
+      certmanager_version: "v1.1.0"

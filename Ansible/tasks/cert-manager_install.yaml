@@ -1,0 +1,63 @@
+# Verify that all needed variables are set.
+- name: "Verifying the existence of all needed variables."
+  assert:
+    that:
+      - certmanager_kubectl_config is defined
+      - certmanager_configuration_project_dir is defined
+      - istio_configuration_project_dir is defined
+      - certmanager_version is defined
+
+# Create the cert-manager namespace.
+- name: "Creating the cert-manager namespace."
+  k8s:
+    src : "{{ certmanager_configuration_project_dir }}/namespace_certmanager.yaml"
+    kubeconfig: "{{ certmanager_kubectl_config }}"
+    state: present
+
+# Add the jetstack  repo.
+- name: "Adding the 'jetstack' repo to list of known ones."
+  shell: "helm repo add jetstack https://charts.jetstack.io"
+
+# Update the repos.
+- name: "Updating repos."
+  shell: "helm repo update"
+
+# Install the helm chart.
+- name: "Installing cert-manager."
+  environment:
+    KUBECONFIG: "{{ certmanager_kubectl_config }}"
+  shell: >
+    helm install cert-manager 
+    --namespace cert-manager 
+    --values {{ certmanager_configuration_project_dir }}/helm/installation_resources/values.yaml 
+    --set installCRDs=true
+    jetstack/cert-manager 
+    --version="{{ certmanager_version }}"
+
+# Remove the default http gateway.
+- name: "Removing the default http gateway."
+  k8s:
+    src : "{{ istio_configuration_project_dir }}/gateway_httpdefault.yaml"
+    kubeconfig: "{{ certmanager_kubectl_config }}"
+    state: absent
+
+# Add a https gateway.
+- name: "Adding a https gateway."
+  k8s:
+    src : "{{ certmanager_configuration_project_dir }}/gateway_httpsdefault.yaml"
+    kubeconfig: "{{ certmanager_kubectl_config }}"
+    state: present
+
+# Add a certificate issuer.
+- name: "Adding a certificate issuer."
+  k8s:
+    src : "{{ certmanager_configuration_project_dir }}/clusterissuer_letsencrypt.yaml"
+    kubeconfig: "{{ certmanager_kubectl_config }}"
+    state: present
+
+# Add a certificate.
+- name: "Adding a certificate."
+  k8s:
+    src : "{{ certmanager_configuration_project_dir }}/certificate_default.yaml"
+    kubeconfig: "{{ certmanager_kubectl_config }}"
+    state: present

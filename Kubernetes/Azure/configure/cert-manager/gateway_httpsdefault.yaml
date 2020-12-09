@@ -1,0 +1,29 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: default-gateway
+  namespace: istio-ingress
+spec:
+  selector:
+    istio: ingressgateway # Use Istio default gateway implementation.
+  servers:
+  - port:
+      number: 80
+      name: http2
+      protocol: HTTP2
+    hosts:
+    # Namespace/VirtualServiceHost
+    # Do NOT set any host here in order to prioritize the cert-manager routing 
+    # when creating/refreshing the certificates. Only a port is allowed.
+    - "*"
+    tls:
+      httpsRedirect: true # Send a 301 redirect for http requests.
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: letsencrypt-prod # Match the certmanager Certificate secretName.
+    hosts:
+    - eu-example-01.westeurope.cloudapp.azure.com # Match a DNS name in the certmanager Certificate.
